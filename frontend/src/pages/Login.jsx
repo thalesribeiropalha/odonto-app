@@ -16,6 +16,7 @@ const Login = () => {
     confirmPassword: '',
     role: 'admin'
   });
+  const [debugInfo, setDebugInfo] = useState('');
 
   const { login, register, error, isAuthenticated, clearError } = useAuth();
   const navigate = useNavigate();
@@ -50,12 +51,25 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setDebugInfo('🔄 Tentando fazer login...');
     clearError();
 
-    const result = await login(formData.email, formData.password);
-    
-    if (result.success) {
-      navigate('/dashboard');
+    console.log('Dados do login:', formData);
+
+    try {
+      const result = await login(formData.email, formData.password);
+      
+      console.log('Resultado do login:', result);
+      
+      if (result && result.success) {
+        setDebugInfo('✅ Login realizado com sucesso!');
+        navigate('/dashboard');
+      } else {
+        setDebugInfo('❌ Falha no login: ' + (result?.message || error || 'Credenciais inválidas'));
+      }
+    } catch (err) {
+      console.error('Erro no login:', err);
+      setDebugInfo('❌ Erro de conexão: ' + err.message);
     }
     
     setIsLoading(false);
@@ -117,6 +131,24 @@ const Login = () => {
         {error && (
           <div className="error-message">
             {error}
+          </div>
+        )}
+
+        {debugInfo && (
+          <div style={{
+            padding: '10px',
+            marginBottom: '1rem',
+            backgroundColor: debugInfo.includes('✅') ? '#d4edda' : 
+                           debugInfo.includes('❌') ? '#f8d7da' : '#d1ecf1',
+            color: debugInfo.includes('✅') ? '#155724' : 
+                   debugInfo.includes('❌') ? '#721c24' : '#0c5460',
+            border: '1px solid',
+            borderColor: debugInfo.includes('✅') ? '#c3e6cb' : 
+                        debugInfo.includes('❌') ? '#f5c6cb' : '#bee5eb',
+            borderRadius: '5px',
+            fontSize: '0.875rem'
+          }}>
+            {debugInfo}
           </div>
         )}
 
