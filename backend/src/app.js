@@ -23,9 +23,11 @@ app.use(express.urlencoded({ extended: true }));
 // Rotas
 const statusRoutes = require('./routes/status');
 const authRoutes = require('./routes/auth');
+const debugRoutes = require('./routes/debug');
 
 app.use('/api', statusRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
