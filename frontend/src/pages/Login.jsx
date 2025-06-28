@@ -62,14 +62,18 @@ const Login = () => {
       console.log('Resultado do login:', result);
       
       if (result && result.success) {
-        setDebugInfo('✅ Login realizado com sucesso!');
-        navigate('/dashboard');
+        setDebugInfo('✅ Login realizado com sucesso! Redirecionando...');
+        // Aguardar 2 segundos antes de redirecionar para mostrar a mensagem
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 2000);
       } else {
         setDebugInfo('❌ Falha no login: ' + (result?.message || error || 'Credenciais inválidas'));
+        console.error('Detalhes do erro:', { result, error });
       }
     } catch (err) {
       console.error('Erro no login:', err);
-      setDebugInfo('❌ Erro de conexão: ' + err.message);
+      setDebugInfo('❌ Erro de conexão: ' + (err.message || 'Não foi possível conectar ao servidor'));
     }
     
     setIsLoading(false);
