@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // URL base da API - em desenvolvimento usa localhost, em produção usa a URL do Railway
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://odonto-app-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
