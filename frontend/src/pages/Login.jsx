@@ -24,7 +24,10 @@ const Login = () => {
   useEffect(() => {
     // Se já está autenticado, redirecionar para dashboard
     if (isAuthenticated) {
-      navigate('/dashboard');
+      setDebugInfo('✅ Usuário já autenticado, redirecionando...');
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 1000);
     }
   }, [isAuthenticated, navigate]);
 
@@ -35,6 +38,12 @@ const Login = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Limpar debug info apenas quando usuário começar a digitar após um erro
+    if (debugInfo.includes('❌')) {
+      setDebugInfo('');
+    }
+    
     if (showRegister) {
       setRegisterData(prev => ({
         ...prev,
