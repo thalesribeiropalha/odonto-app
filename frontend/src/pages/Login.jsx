@@ -65,6 +65,24 @@ const Login = () => {
 
     console.log('Dados do login:', formData);
 
+    // Modo demo temporário enquanto Railway não volta
+    if (formData.email === 'demo@odonto.com' && formData.password === 'demo123') {
+      setDebugInfo('✅ Login demo realizado com sucesso! Redirecionando...');
+      setTimeout(() => {
+        // Simular autenticação no localStorage
+        localStorage.setItem('token', 'demo-token');
+        localStorage.setItem('user', JSON.stringify({
+          id: 1,
+          name: 'Dr. Demo',
+          email: 'demo@odonto.com',
+          role: 'admin'
+        }));
+        navigate('/dashboard');
+      }, 2000);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const result = await login(formData.email, formData.password);
       
@@ -77,12 +95,12 @@ const Login = () => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        setDebugInfo('❌ Falha no login: ' + (result?.message || error || 'Credenciais inválidas'));
+        setDebugInfo('❌ Falha no login: ' + (result?.message || error || 'Credenciais inválidas. Tente: demo@odonto.com / demo123'));
         console.error('Detalhes do erro:', { result, error });
       }
     } catch (err) {
       console.error('Erro no login:', err);
-      setDebugInfo('❌ Erro de conexão: ' + (err.message || 'Não foi possível conectar ao servidor'));
+      setDebugInfo('❌ Erro de conexão: ' + (err.message || 'Railway offline. Tente: demo@odonto.com / demo123'));
     }
     
     setIsLoading(false);
@@ -139,6 +157,19 @@ const Login = () => {
           <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
             {showRegister ? 'Criar nova conta' : 'Faça login para continuar'}
           </p>
+          {!showRegister && (
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: '#fff3cd',
+              color: '#856404',
+              border: '1px solid #ffeaa7',
+              borderRadius: '5px',
+              fontSize: '0.8rem',
+              marginBottom: '1rem'
+            }}>
+              💡 <strong>Demo:</strong> demo@odonto.com / demo123
+            </div>
+          )}
         </div>
 
         {error && (
