@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext'
 import TestConnection from './pages/TestConnection'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import Users from './pages/Users'
 import './App.css'
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<TestConnection />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/users" element={<Users />} />
           </Routes>
         </div>
       </Router>
