@@ -1,83 +1,107 @@
 const express = require('express');
-const User = require('../models/User');
 const router = express.Router();
 
-// Dados mockados para modo demo
-const mockUsers = [
-  {
-    _id: '507f1f77bcf86cd799439011',
-    name: 'Dr. João Silva',
-    email: 'joao.silva@clinica.com',
-    role: 'dentista',
-    isActive: true,
-    createdAt: new Date('2024-01-15T10:00:00Z'),
-    lastLogin: new Date('2024-12-29T08:30:00Z')
-  },
-  {
-    _id: '507f1f77bcf86cd799439012',
-    name: 'Maria Santos',
-    email: 'maria.santos@clinica.com',
-    role: 'secretaria',
-    isActive: true,
-    createdAt: new Date('2024-02-20T14:20:00Z'),
-    lastLogin: new Date('2024-12-28T16:45:00Z')
-  },
-  {
-    _id: '507f1f77bcf86cd799439013',
-    name: 'Admin Sistema',
-    email: 'admin@clinica.com',
-    role: 'admin',
-    isActive: true,
-    createdAt: new Date('2024-01-01T00:00:00Z'),
-    lastLogin: new Date('2024-12-29T09:15:00Z')
-  },
-  {
-    _id: '507f1f77bcf86cd799439014',
-    name: 'Dra. Ana Costa',
-    email: 'ana.costa@clinica.com',
-    role: 'dentista',
-    isActive: false,
-    createdAt: new Date('2024-03-10T11:30:00Z'),
-    lastLogin: new Date('2024-11-15T14:20:00Z')
-  }
-];
-
-// Verificar se está conectado ao MongoDB
-const isConnectedToDB = () => {
-  return process.env.MONGODB_URI && require('mongoose').connection.readyState === 1;
-};
-
-// Endpoint temporário para debug - listar usuários
-router.get('/users', async (req, res) => {
+// Rota para criar usuário admin em modo demo
+router.post('/create-admin', async (req, res) => {
   try {
-    let users;
+    // Importar o sistema de usuários em memória
+    const { usersInMemory } = require('../middleware/auth');
+    const bcrypt = require('bcrypt');
     
-    console.log('🔍 DEBUG - MONGODB_URI:', !!process.env.MONGODB_URI);
-    console.log('🔍 DEBUG - Connection state:', require('mongoose').connection.readyState);
-    console.log('🔍 DEBUG - isConnectedToDB():', isConnectedToDB());
+    console.log('🔧 DEBUG: Criando usuário admin...');
     
-    // FORÇAR uso de dados mockados para teste
-    console.log('📊 TESTE: Forçando uso de dados mockados');
-    users = mockUsers;
+    // Verificar se usuário já existe
+    const existingUser = usersInMemory.find(u => u.email === 'thales.rp@hotmail.com');
+    if (existingUser) {
+      return res.json({
+        success: true,
+        message: 'Usuário admin já existe',
+        user: {
+          email: existingUser.email,
+          name: existingUser.name,
+          role: existingUser.role
+        }
+      });
+    }
+    
+    // Criar hash da senha
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('123456', salt);
+    
+    // Criar usuário admin
+    const adminUser = {
+      _id: `demo_admin_${Date.now()}`,
+      name: 'Thales Ribeiro',
+      email: 'thales.rp@hotmail.com',
+      password: hashedPassword,
+      role: 'admin',
+      createdAt: new Date(),
+      lastLogin: null
+    };
+    
+    usersInMemory.push(adminUser);
+    
+    console.log('✅ Usuário admin criado com sucesso!');
+    console.log('📊 Total de usuários na memória:', usersInMemory.length);
     
     res.json({
-      total: users.length,
-      users: users.map(user => ({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt
-      }))
+      success: true,
+      message: 'Usuário admin criado com sucesso!',
+      user: {
+        email: adminUser.email,
+        name: adminUser.name,
+        role: adminUser.role
+      },
+      totalUsers: usersInMemory.length
     });
+    
   } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
+    console.error('❌ Erro ao criar usuário admin:', error);
     res.status(500).json({
-      message: 'Erro ao buscar usuários',
+      success: false,
+      message: 'Erro ao criar usuário admin',
       error: error.message
     });
   }
+});
+
+// Rota para listar usuários em memória
+router.get('/users', (req, res) => {
+  try {
+    const { usersInMemory } = require('../middleware/auth');
+    
+    const users = usersInMemory.map(user => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      lastLogin: user.lastLogin
+    }));
+    
+    res.json({
+      success: true,
+      totalUsers: users.length,
+      users
+    });
+    
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao listar usuários',
+      error: error.message
+    });
+  }
+});
+
+// Rota de teste de conexão
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Debug API funcionando!',
+    timestamp: new Date().toISOString(),
+    mode: process.env.MONGODB_URI ? 'MONGODB' : 'DEMO'
+  });
 });
 
 module.exports = router;
