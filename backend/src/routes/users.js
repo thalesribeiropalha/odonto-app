@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { auth } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 const { organizationAuth, canManageUsers } = require('../middleware/organizationAuth');
 const {
   getUsers,
@@ -11,7 +11,7 @@ const {
 } = require('../controllers/userController');
 
 // Todas as rotas protegidas por autenticação e organização
-router.use(auth);
+router.use(protect);
 router.use(organizationAuth);
 
 // GET /api/users - Listar usuários da organização
