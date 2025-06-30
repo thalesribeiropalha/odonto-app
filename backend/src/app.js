@@ -26,12 +26,14 @@ const authRoutes = require('./routes/auth');
 const debugRoutes = require('./routes/debug');
 const userRoutes = require('./routes/users');
 const testRoutes = require('./routes/test');
+const organizationRoutes = require('./routes/organizations');
 
 app.use('/api', statusRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/organizations', organizationRoutes);
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
