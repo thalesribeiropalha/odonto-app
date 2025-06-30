@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import OrganizationCard from '../components/OrganizationCard';
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -134,23 +135,31 @@ const Dashboard = () => {
                 </button>
               </div>
 
+              {/* Card de Organizações - Apenas para Admin e Owner */}
+              {(user?.role === 'admin' || user?.organization?.role === 'owner') && (
+                <OrganizationCard 
+                  userRole={user?.role === 'admin' ? 'admin' : 'owner'}
+                  onManageClick={() => navigate('/organizations')}
+                />
+              )}
+
               <div className="dashboard-card">
                 <h3 className="card-title">🔧 Configurações</h3>
                 <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
                   Gerencie as configurações do sistema
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <button 
-                    className="btn" 
+                  <Link 
+                    to="/users"
+                    className="btn btn-primary" 
                     style={{ 
                       fontSize: '0.875rem',
-                      backgroundColor: '#6b7280',
-                      color: 'white'
+                      textDecoration: 'none',
+                      textAlign: 'center'
                     }}
-                    disabled
                   >
-                    Usuários (Em breve)
-                  </button>
+                    👥 Gerenciar Usuários
+                  </Link>
                   <button 
                     className="btn" 
                     style={{ 
