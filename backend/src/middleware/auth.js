@@ -1,6 +1,12 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
+// Sistema de usuários em memória para demonstração (quando não há MongoDB)
+let usersInMemory = [];
+
+// Helper para modo demo (sem MongoDB)
+const isDemoMode = () => !process.env.MONGODB_URI;
+
 const protect = async (req, res, next) => {
   let token;
 
@@ -15,19 +21,39 @@ const protect = async (req, res, next) => {
       // Verificar token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
 
-      // Obter usuário do token
-      req.user = await User.findById(decoded.id).select('-password');
+      if (isDemoMode()) {
+        // MODO DEMO - Buscar usuário em memória
+        const user = usersInMemory.find(u => u._id === decoded.id);
+        
+        if (!user) {
+          return res.status(401).json({
+            message: 'Não autorizado, usuário não encontrado (Demo)'
+          });
+        }
 
-      if (!req.user) {
-        return res.status(401).json({
-          message: 'Não autorizado, usuário não encontrado'
-        });
-      }
+        req.user = {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          organization: user.organization,
+          isActive: true
+        };
+      } else {
+        // MODO MONGODB
+        req.user = await User.findById(decoded.id).select('-password');
 
-      if (!req.user.isActive) {
-        return res.status(401).json({
-          message: 'Não autorizado, usuário inativo'
-        });
+        if (!req.user) {
+          return res.status(401).json({
+            message: 'Não autorizado, usuário não encontrado'
+          });
+        }
+
+        if (!req.user.isActive) {
+          return res.status(401).json({
+            message: 'Não autorizado, usuário inativo'
+          });
+        }
       }
 
       next();
@@ -37,13 +63,21 @@ const protect = async (req, res, next) => {
         message: 'Não autorizado, token inválido'
       });
     }
-  }
-
-  if (!token) {
+  } else {
     res.status(401).json({
       message: 'Não autorizado, sem token'
     });
   }
+};
+
+// Função para adicionar usuário à memória (para uso do authController)
+const addUserToMemory = (user) => {
+  usersInMemory.push(user);
+};
+
+// Função para obter usuários da memória
+const getUsersFromMemory = () => {
+  return usersInMemory;
 };
 
 // Middleware para verificar permissões por role
@@ -58,4 +92,4 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize };
+module.exports = { protect, authorize, addUserToMemory, getUsersFromMemory, usersInMemory };

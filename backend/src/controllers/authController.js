@@ -4,8 +4,8 @@ const Organization = require('../models/Organization');
 const { getAllPermissions } = require('../middleware/organizationAuth');
 const bcrypt = require('bcrypt');
 
-// Sistema de usuários em memória para demonstração (quando não há MongoDB)
-let usersInMemory = [];
+// Importar sistema de usuários em memória compartilhado
+const { usersInMemory, addUserToMemory } = require('../middleware/auth');
 
 // Gerar JWT token
 const generateToken = (id) => {
