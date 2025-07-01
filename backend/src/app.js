@@ -24,6 +24,7 @@ const userRoutes = require('./routes/users');
 const testSupabaseRoutes = require('./routes/test-supabase');
 const organizationRoutes = require('./routes/organizations');
 const fixAdminRoutes = require('./routes/fix-admin');
+const debugAuthRoutes = require('./routes/debug-auth');
 
 app.use('/api', statusRoutes);
 app.use('/api/auth', authRoutes);
@@ -32,6 +33,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/test-supabase', testSupabaseRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/fix', fixAdminRoutes);
+app.use('/api/debug-auth', debugAuthRoutes);
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
