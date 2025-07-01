@@ -12,10 +12,7 @@ const connectDB = async () => {
     // Para produção, usar MongoDB Atlas
     const mongoURI = process.env.MONGODB_URI;
     
-    const conn = await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(mongoURI);
 
     console.log(`🍃 MongoDB conectado: ${conn.connection.host}`);
   } catch (error) {
