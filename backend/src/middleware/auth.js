@@ -1,11 +1,5 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-
-// Sistema de usuários em memória para demonstração (quando não há MongoDB)
-let usersInMemory = [];
-
-// Helper para modo demo (sem MongoDB)
-const isDemoMode = () => !process.env.MONGODB_URI;
+const { supabase } = require('../config/supabase');
 
 const protect = async (req, res, next) => {
   let token;
@@ -21,40 +15,30 @@ const protect = async (req, res, next) => {
       // Verificar token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret-key');
 
-      if (isDemoMode()) {
-        // MODO DEMO - Buscar usuário em memória
-        const user = usersInMemory.find(u => u._id === decoded.id);
-        
-        if (!user) {
-          return res.status(401).json({
-            message: 'Não autorizado, usuário não encontrado (Demo)'
-          });
-        }
+      // Buscar usuário no Supabase
+      const { data: user, error } = await supabase
+        .from('users')
+        .select('id, name, email, role, organization_id, permissions, is_active')
+        .eq('id', decoded.id)
+        .eq('is_active', true)
+        .single();
 
-        req.user = {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          organization: user.organization,
-          isActive: true
-        };
-      } else {
-        // MODO MONGODB
-        req.user = await User.findById(decoded.id).select('-password');
-
-        if (!req.user) {
-          return res.status(401).json({
-            message: 'Não autorizado, usuário não encontrado'
-          });
-        }
-
-        if (!req.user.isActive) {
-          return res.status(401).json({
-            message: 'Não autorizado, usuário inativo'
-          });
-        }
+      if (error || !user) {
+        return res.status(401).json({
+          message: 'Não autorizado, usuário não encontrado'
+        });
       }
+
+      req.user = {
+        id: user.id,
+        _id: user.id, // Compatibilidade com código existente
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        organizationId: user.organization_id,
+        permissions: user.permissions || [],
+        isActive: user.is_active
+      };
 
       next();
     } catch (error) {
@@ -70,16 +54,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Função para adicionar usuário à memória (para uso do authController)
-const addUserToMemory = (user) => {
-  usersInMemory.push(user);
-};
-
-// Função para obter usuários da memória
-const getUsersFromMemory = () => {
-  return usersInMemory;
-};
-
 // Middleware para verificar permissões por role
 const authorize = (...roles) => {
   return (req, res, next) => {
@@ -92,4 +66,28 @@ const authorize = (...roles) => {
   };
 };
 
-module.exports = { protect, authorize, addUserToMemory, getUsersFromMemory, usersInMemory };
+// Middleware para verificar permissões específicas
+const checkPermission = (permission) => {
+  return (req, res, next) => {
+    if (!req.user.permissions.includes(permission)) {
+      return res.status(403).json({
+        message: `Não autorizado. Permissão '${permission}' necessária`
+      });
+    }
+    next();
+  };
+};
+
+// Funções de compatibilidade (para não quebrar código existente)
+const addUserToMemory = () => {};
+const getUsersFromMemory = () => [];
+const usersInMemory = [];
+
+module.exports = { 
+  protect, 
+  authorize, 
+  checkPermission,
+  addUserToMemory, 
+  getUsersFromMemory, 
+  usersInMemory 
+};

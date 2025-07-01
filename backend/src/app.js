@@ -1,9 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
-
-// Conectar ao banco de dados
-connectDB();
 
 const app = express();
 
@@ -25,14 +21,14 @@ const statusRoutes = require('./routes/status');
 const authRoutes = require('./routes/auth');
 const debugRoutes = require('./routes/debug');
 const userRoutes = require('./routes/users');
-const testRoutes = require('./routes/test');
+const testSupabaseRoutes = require('./routes/test-supabase');
 const organizationRoutes = require('./routes/organizations');
 
 app.use('/api', statusRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/test', testRoutes);
+app.use('/api/test-supabase', testSupabaseRoutes);
 app.use('/api/organizations', organizationRoutes);
 
 // Middleware de tratamento de erros

@@ -5,9 +5,9 @@ const { organizationAuth, canManageUsers } = require('../middleware/organization
 const {
   getUsers,
   createUser,
-  getUserById,
+  getUser,
   updateUser,
-  toggleUserStatus
+  deleteUser
 } = require('../controllers/userController');
 
 // Todas as rotas protegidas por autenticação e organização
@@ -21,12 +21,12 @@ router.get('/', getUsers);
 router.post('/', canManageUsers, createUser);
 
 // GET /api/users/:id - Buscar usuário específico
-router.get('/:id', getUserById);
+router.get('/:id', getUser);
 
 // PUT /api/users/:id - Atualizar usuário (apenas admin/owner)
 router.put('/:id', canManageUsers, updateUser);
 
-// PATCH /api/users/:id/toggle-status - Ativar/desativar usuário (apenas admin/owner)
-router.patch('/:id/toggle-status', canManageUsers, toggleUserStatus);
+// DELETE /api/users/:id - Deletar usuário (apenas admin/owner)
+router.delete('/:id', canManageUsers, deleteUser);
 
 module.exports = router;

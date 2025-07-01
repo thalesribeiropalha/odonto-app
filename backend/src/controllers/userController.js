@@ -1,112 +1,91 @@
-const User = require('../models/User');
-const { getDefaultPermissions } = require('../middleware/organizationAuth');
+const { supabase, supabaseAdmin } = require('../config/supabase');
+const bcrypt = require('bcrypt');
 
-// Verificar se está conectado ao MongoDB
-const isConnectedToDB = () => {
-  return process.env.MONGODB_URI && require('mongoose').connection.readyState === 1;
+// Função auxiliar para hash de senha
+const hashPassword = async (password) => {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
 };
 
-// Dados mockados para modo demo
-const mockUsers = [
-  {
-    _id: '507f1f77bcf86cd799439011',
-    name: 'Dr. João Silva',
-    email: 'joao.silva@clinica.com',
-    organization: { role: 'dentist' },
-    isActive: true,
-    createdAt: new Date('2024-01-15T10:00:00Z'),
-    lastLogin: new Date('2024-12-29T08:30:00Z'),
-    profile: { cro: '12345-SP', specialty: 'Ortodontia' }
-  },
-  {
-    _id: '507f1f77bcf86cd799439012',
-    name: 'Maria Santos',
-    email: 'maria.santos@clinica.com',
-    organization: { role: 'secretary' },
-    isActive: true,
-    createdAt: new Date('2024-02-20T14:20:00Z'),
-    lastLogin: new Date('2024-12-28T16:45:00Z'),
-    profile: {}
-  },
-  {
-    _id: '507f1f77bcf86cd799439013',
-    name: 'Admin Sistema',
-    email: 'admin@clinica.com',
-    organization: { role: 'admin' },
-    isActive: true,
-    createdAt: new Date('2024-01-01T00:00:00Z'),
-    lastLogin: new Date('2024-12-29T09:15:00Z'),
-    profile: {}
-  }
-];
+// Função auxiliar para comparar senhas
+const comparePassword = async (password, hashedPassword) => {
+  return await bcrypt.compare(password, hashedPassword);
+};
+
+// Obter permissões padrão por role
+const getDefaultPermissions = (role) => {
+  const permissions = {
+    owner: ['users.create', 'users.read', 'users.update', 'users.delete', 'organization.manage', 'reports.read', 'settings.update'],
+    admin: ['users.create', 'users.read', 'users.update', 'users.delete', 'reports.read'],
+    dentist: ['users.read', 'patients.create', 'patients.read', 'patients.update', 'appointments.create', 'appointments.read', 'appointments.update'],
+    secretary: ['users.read', 'patients.read', 'appointments.create', 'appointments.read', 'appointments.update']
+  };
+  return permissions[role] || [];
+};
 
 // Listar usuários da organização
 const getUsers = async (req, res) => {
   try {
     const { search, role, status } = req.query;
-    let users;
+    const organizationId = req.organization?.id;
     
-    if (isConnectedToDB()) {
-      let filter = { 'organization.id': req.organization._id };
-      
-      if (search) {
-        filter.$or = [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } }
-        ];
-      }
-      
-      if (role && role !== 'all') {
-        filter['organization.role'] = role;
-      }
-      
-      if (status && status !== 'all') {
-        filter.isActive = status === 'active';
-      }
-      
-      users = await User.find(filter, { password: 0 }).sort({ createdAt: -1 });
-    } else {
-      users = [...mockUsers];
-      
-      if (search) {
-        const searchTerm = search.toLowerCase();
-        users = users.filter(user =>
-          user.name.toLowerCase().includes(searchTerm) ||
-          user.email.toLowerCase().includes(searchTerm)
-        );
-      }
-      
-      if (role && role !== 'all') {
-        users = users.filter(user => user.organization.role === role);
-      }
-      
-      if (status && status !== 'all') {
-        const isActive = status === 'active';
-        users = users.filter(user => user.isActive === isActive);
-      }
-      
-      users.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    if (!organizationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Organização não identificada'
+      });
+    }
+
+    let query = supabase
+      .from('users')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: false });
+
+    // Aplicar filtros
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
     }
     
+    if (role && role !== 'all') {
+      query = query.eq('role', role);
+    }
+    
+    if (status && status !== 'all') {
+      const isActive = status === 'active';
+      query = query.eq('is_active', isActive);
+    }
+
+    const { data: users, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar usuários:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar usuários',
+        error: error.message
+      });
+    }
+
     res.json({
       success: true,
       total: users.length,
       users: users.map(user => ({
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        role: user.organization.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
-        profile: user.profile
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        lastLogin: user.last_login,
+        profile: user.profile || {}
       }))
     });
   } catch (error) {
     console.error('Erro ao buscar usuários:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar usuários',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
@@ -116,117 +95,145 @@ const getUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const { name, email, password, role, profile } = req.body;
+    const organizationId = req.organization?.id;
+    const createdBy = req.user?.id;
     
     if (!name || !email || !password || !role) {
       return res.status(400).json({
         success: false,
-        message: 'Nome, email, senha e função são obrigatórios'
+        message: 'Nome, email, senha e role são obrigatórios'
       });
     }
     
-    // Verificar limite de usuários
-    const currentUsers = await User.countDocuments({
-      'organization.id': req.organization._id,
-      isActive: true
-    });
-    
-    if (currentUsers >= req.organization.subscription.maxUsers) {
+    if (!organizationId) {
       return res.status(400).json({
         success: false,
-        message: `Limite de usuários atingido (${req.organization.subscription.maxUsers})`
+        message: 'Organização não identificada'
       });
     }
     
-    // Verificar se email já existe
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    // Verificar se já existe usuário com este email na organização
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .eq('organization_id', organizationId)
+      .single();
+
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'Este email já está sendo usado'
+        message: 'Já existe um usuário com este email na organização'
       });
     }
     
+    // Hash da senha
+    const hashedPassword = await hashPassword(password);
+    
     // Criar usuário
-    const newUser = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      organization: {
-        id: req.organization._id,
+    const { data: user, error } = await supabase
+      .from('users')
+      .insert([{
+        name: name.trim(),
+        email: email.toLowerCase().trim(),
+        password: hashedPassword,
         role,
+        organization_id: organizationId,
         permissions: getDefaultPermissions(role),
-        joinedAt: new Date(),
-        createdBy: req.user._id
-      },
-      profile: profile || {},
-      isActive: true
-    });
-    
-    const userResponse = await User.findById(newUser._id).select('-password');
-    
+        profile: profile || {},
+        created_by: createdBy,
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar usuário:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao criar usuário',
+        error: error.message
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Usuário criado com sucesso',
       user: {
-        id: userResponse._id,
-        name: userResponse.name,
-        email: userResponse.email,
-        role: userResponse.organization.role,
-        isActive: userResponse.isActive,
-        createdAt: userResponse.createdAt,
-        profile: userResponse.profile
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        profile: user.profile || {}
       }
     });
   } catch (error) {
     console.error('Erro ao criar usuário:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao criar usuário',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
 };
 
-// Buscar usuário por ID
-const getUserById = async (req, res) => {
+// Obter usuário específico
+const getUser = async (req, res) => {
   try {
     const { id } = req.params;
+    const organizationId = req.organization?.id;
     
-    let user;
-    if (isConnectedToDB()) {
-      user = await User.findOne({
-        _id: id,
-        'organization.id': req.organization._id
-      }, { password: 0 });
-    } else {
-      user = mockUsers.find(u => u._id === id);
+    if (!organizationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Organização não identificada'
+      });
     }
     
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar usuário:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar usuário',
+        error: error.message
+      });
+    }
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'Usuário não encontrado'
       });
     }
-    
+
     res.json({
       success: true,
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        role: user.organization.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
-        profile: user.profile
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        lastLogin: user.last_login,
+        profile: user.profile || {},
+        permissions: user.permissions || []
       }
     });
   } catch (error) {
     console.error('Erro ao buscar usuário:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar usuário',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
@@ -236,96 +243,157 @@ const getUserById = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, isActive, profile } = req.body;
+    const { name, email, role, profile, isActive } = req.body;
+    const organizationId = req.organization?.id;
     
-    if (!name || !email || !role) {
+    if (!organizationId) {
       return res.status(400).json({
         success: false,
-        message: 'Nome, email e função são obrigatórios'
+        message: 'Organização não identificada'
       });
     }
     
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        name: name.trim(),
-        email: email.toLowerCase().trim(),
-        'organization.role': role,
-        'organization.permissions': getDefaultPermissions(role),
-        profile: profile || {},
-        isActive: isActive !== undefined ? isActive : true
-      },
-      { new: true, runValidators: true }
-    ).select('-password');
-    
-    if (!updatedUser) {
-      return res.status(404).json({
+    if (!name || !email) {
+      return res.status(400).json({
         success: false,
-        message: 'Usuário não encontrado'
+        message: 'Nome e email são obrigatórios'
       });
     }
     
-    res.json({
-      success: true,
-      message: 'Usuário atualizado com sucesso',
-      user: {
-        id: updatedUser._id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        role: updatedUser.organization.role,
-        isActive: updatedUser.isActive,
-        createdAt: updatedUser.createdAt,
-        profile: updatedUser.profile
-      }
-    });
-  } catch (error) {
-    console.error('Erro ao atualizar usuário:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao atualizar usuário',
-      error: error.message
-    });
-  }
-};
+    // Verificar se já existe outro usuário com este email na organização
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .eq('organization_id', organizationId)
+      .neq('id', id)
+      .single();
 
-// Toggle status do usuário
-const toggleUserStatus = async (req, res) => {
-  try {
-    const { id } = req.params;
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Já existe outro usuário com este email na organização'
+      });
+    }
     
-    const user = await User.findOne({
-      _id: id,
-      'organization.id': req.organization._id
-    });
+    const updateData = {
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      profile: profile || {}
+    };
     
+    // Só atualizar role se fornecido
+    if (role) {
+      updateData.role = role;
+      updateData.permissions = getDefaultPermissions(role);
+    }
+    
+    // Só atualizar status se fornecido
+    if (typeof isActive === 'boolean') {
+      updateData.is_active = isActive;
+    }
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao atualizar usuário',
+        error: error.message
+      });
+    }
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'Usuário não encontrado'
       });
     }
-    
-    user.isActive = !user.isActive;
-    await user.save();
-    
+
     res.json({
       success: true,
-      message: `Usuário ${user.isActive ? 'ativado' : 'desativado'} com sucesso`,
+      message: 'Usuário atualizado com sucesso',
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
-        role: user.organization.role,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        profile: user.profile
+        role: user.role,
+        isActive: user.is_active,
+        createdAt: user.created_at,
+        profile: user.profile || {}
       }
     });
   } catch (error) {
-    console.error('Erro ao alterar status do usuário:', error);
+    console.error('Erro ao atualizar usuário:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao alterar status do usuário',
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+};
+
+// Deletar usuário
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const organizationId = req.organization?.id;
+    
+    if (!organizationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Organização não identificada'
+      });
+    }
+    
+    // Não permitir deletar o próprio usuário
+    if (id === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Não é possível deletar seu próprio usuário'
+      });
+    }
+    
+    const { data: user, error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id)
+      .eq('organization_id', organizationId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao deletar usuário:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao deletar usuário',
+        error: error.message
+      });
+    }
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Usuário não encontrado'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Usuário deletado com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao deletar usuário:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
@@ -334,7 +402,7 @@ const toggleUserStatus = async (req, res) => {
 module.exports = {
   getUsers,
   createUser,
-  getUserById,
+  getUser,
   updateUser,
-  toggleUserStatus
+  deleteUser
 };

@@ -1,252 +1,192 @@
-# 🦷 Odonto App - Sistema de Gestão Odontológica
+# Sistema de Gestão Odontológica
 
-Sistema completo para gestão de consultório odontológico, desenvolvido com **Node.js** (backend) e **React** (frontend), preparado para deploy na web e uso como PWA no celular.
+Sistema completo para gestão de clínicas odontológicas com autenticação, gestão de usuários e organizações.
 
-## 🚀 Arquitetura
-
-- **Frontend**: React + Vite + PWA (hospedado no Vercel)
-- **Backend**: Node.js + Express + MongoDB (hospedado no Railway)
-- **Banco de Dados**: MongoDB Atlas
-- **Autenticação**: JWT (JSON Web Tokens)
-
-## 📱 Funcionalidades Atuais
-
-✅ **Implementado:**
-- Sistema de autenticação (login/registro)
-- Teste de conexão entre frontend e backend
-- Dashboard responsivo com design profissional
-- PWA (Progressive Web App) para instalação no celular
-- Diferentes níveis de usuário (admin, dentista, secretária)
-
-🔄 **Em Desenvolvimento:**
-- Gestão de pacientes
-- Sistema de agendamento
-- Controle financeiro
-- Relatórios e estatísticas
-
-## 🛠️ Configuração Local
-
-### Pré-requisitos
-- Node.js 18+ instalado
-- Git instalado
-- Conta no MongoDB Atlas (gratuita)
-
-### 1. Clonar e Configurar o Backend
-
-```bash
-# Navegar para o backend
-cd backend
-
-# Instalar dependências
-npm install
-
-# Configurar variáveis de ambiente
-# Editar o arquivo .env com suas configurações:
-# - MONGODB_URI: String de conexão do MongoDB Atlas
-# - JWT_SECRET: Chave secreta para tokens (substitua por uma segura)
-# - PORT: 3001 (padrão)
-
-# Executar em desenvolvimento
-npm run dev
-```
-
-### 2. Configurar o Frontend
-
-```bash
-# Em outro terminal, navegar para o frontend
-cd frontend
-
-# Instalar dependências
-npm install
-
-# Executar em desenvolvimento
-npm run dev
-```
-
-### 3. Acessar o Sistema
-
-- **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:3001
-- **Teste de Status**: http://localhost:3001/api/status
-
-## 🌐 Deploy para Produção
-
-### Backend no Railway
-
-1. **Criar conta no Railway**: https://railway.app
-2. **Instalar Railway CLI**:
-   ```bash
-   npm install -g @railway/cli
-   ```
-
-3. **Deploy do Backend**:
-   ```bash
-   cd backend
-   railway login
-   railway init
-   railway up
-   ```
-
-4. **Configurar Variáveis de Ambiente no Railway**:
-   - `MONGODB_URI`: URI do MongoDB Atlas
-   - `JWT_SECRET`: Chave secreta segura
-   - `NODE_ENV`: production
-   - `FRONTEND_URL`: URL do frontend no Vercel
-
-### Frontend no Vercel
-
-1. **Criar conta no Vercel**: https://vercel.com
-2. **Instalar Vercel CLI**:
-   ```bash
-   npm install -g vercel
-   ```
-
-3. **Deploy do Frontend**:
-   ```bash
-   cd frontend
-   vercel login
-   npm run build
-   vercel
-   ```
-
-4. **Configurar Environment Variables no Vercel**:
-   - `VITE_API_URL`: URL do backend no Railway
-
-## 📱 Instalação como PWA no iPhone
-
-1. **Acessar via Safari**: Abra a URL do Vercel no Safari do iPhone
-2. **Compartilhar**: Toque no ícone de compartilhamento (quadrado com seta)
-3. **Adicionar à Tela de Início**: Role para baixo e toque em "Adicionar à Tela de Início"
-4. **Confirmar**: Digite o nome desejado e toque em "Adicionar"
-
-O app ficará disponível na tela inicial como um aplicativo nativo!
-
-## 🔧 Scripts Disponíveis
+## 🔧 Tecnologias
 
 ### Backend
-```bash
-npm run dev      # Executar em desenvolvimento com nodemon
-npm start        # Executar em produção
-```
+- **Node.js** + Express
+- **Supabase** (PostgreSQL) - Banco de dados
+- **JWT** - Autenticação
+- **bcrypt** - Hash de senhas
 
 ### Frontend
+- **React** + Vite
+- **Axios** - Requisições HTTP
+- **CSS Modules** - Estilização
+
+## 🚀 Configuração
+
+### 1. Backend
+
 ```bash
-npm run dev      # Executar em desenvolvimento
-npm run build    # Gerar build de produção
-npm run preview  # Visualizar build localmente
+cd backend
+npm install
 ```
+
+#### Variáveis de Ambiente
+Crie um arquivo `.env` baseado no `.env.example`:
+
+```env
+# Configurações do Servidor
+PORT=3002
+NODE_ENV=development
+
+# JWT Secret
+JWT_SECRET=your-jwt-secret-key-here
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+SUPABASE_SERVICE_KEY=your-service-role-key-here
+
+# Frontend URL (para CORS)
+FRONTEND_URL=http://localhost:5173
+```
+
+#### Configuração do Banco de Dados
+1. Crie um projeto no [Supabase](https://supabase.com)
+2. Execute o SQL em `backend/src/config/create-tables.sql` no SQL Editor do Supabase
+3. Configure as variáveis de ambiente com suas credenciais
+
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+```
+
+#### Variáveis de Ambiente
+Crie um arquivo `.env` no frontend:
+
+```env
+VITE_API_URL=http://localhost:3002
+```
+
+## 🏃‍♂️ Executando
+
+### Desenvolvimento
+
+```bash
+# Backend
+cd backend
+npm run dev
+
+# Frontend (em outro terminal)
+cd frontend
+npm run dev
+```
+
+### Produção
+
+```bash
+# Backend
+cd backend
+npm start
+
+# Frontend
+cd frontend
+npm run build
+```
+
+## 📊 Estrutura do Banco
+
+### Tabelas
+
+#### `organizations`
+- Dados das clínicas/organizações
+- Configurações e assinaturas
+- Endereços e contatos
+
+#### `users`
+- Usuários do sistema
+- Roles: owner, admin, dentist, secretary
+- Permissões granulares
+- Vinculação com organizações
+
+## 🔐 Autenticação
+
+Sistema baseado em JWT com:
+- Login/registro de usuários
+- Middleware de proteção de rotas
+- Verificação de permissões por role
+- Tokens com expiração de 14 dias
 
 ## 📁 Estrutura do Projeto
 
 ```
-odonto-app/
-├── backend/                 # API Node.js
-│   ├── src/
-│   │   ├── controllers/     # Lógica de negócio
-│   │   ├── models/         # Modelos do banco de dados
-│   │   ├── routes/         # Rotas da API
-│   │   ├── middleware/     # Middlewares (auth, etc.)
-│   │   ├── config/         # Configurações (DB, etc.)
-│   │   └── app.js         # Configuração do Express
-│   ├── .env               # Variáveis de ambiente
-│   ├── server.js          # Entrada da aplicação
-│   └── railway.json       # Configuração do Railway
-│
-├── frontend/               # App React
-│   ├── src/
-│   │   ├── components/    # Componentes reutilizáveis
-│   │   ├── pages/        # Páginas da aplicação
-│   │   ├── services/     # Comunicação com API
-│   │   ├── context/      # Context API (auth, etc.)
-│   │   └── assets/       # Imagens, ícones, etc.
-│   ├── public/           # Arquivos públicos
-│   │   └── manifest.json # Configuração PWA
-│   └── vite.config.js    # Configuração do Vite
-│
-└── README.md             # Este arquivo
+backend/
+├── src/
+│   ├── config/
+│   │   ├── supabase.js          # Configuração Supabase
+│   │   └── create-tables.sql    # SQL de criação das tabelas
+│   ├── controllers/             # Lógica de negócio
+│   ├── middleware/             # Middlewares (auth, etc.)
+│   └── routes/                 # Definição das rotas
+├── server.js                   # Entrada da aplicação
+└── package.json
+
+frontend/
+├── src/
+│   ├── components/             # Componentes React
+│   ├── pages/                  # Páginas da aplicação
+│   ├── services/              # Serviços (API calls)
+│   └── context/               # Context API (Auth)
+├── index.html
+└── package.json
 ```
 
-## 🔐 Sistema de Autenticação
+## 🌐 API Endpoints
 
-### Registrar Novo Usuário
-```javascript
-// Endpoint: POST /api/auth/register
-{
-  "name": "Dr. João Silva",
-  "email": "joao@clinica.com",
-  "password": "senha123456",
-  "role": "admin" // admin | dentista | secretaria
-}
-```
+### Autenticação
+- `POST /api/auth/login` - Login
+- `POST /api/auth/register` - Registro simples
+- `POST /api/auth/register-organization` - Registro com organização
+- `GET /api/auth/profile` - Perfil do usuário
+- `GET /api/auth/verify` - Verificar token
 
-### Fazer Login
-```javascript
-// Endpoint: POST /api/auth/login
-{
-  "email": "joao@clinica.com",
-  "password": "senha123456"
-}
-```
+### Usuários
+- `GET /api/users` - Listar usuários
+- `POST /api/users` - Criar usuário
+- `GET /api/users/:id` - Obter usuário
+- `PUT /api/users/:id` - Atualizar usuário
+- `DELETE /api/users/:id` - Deletar usuário
 
-## 🔄 Próximos Passos para Desenvolvimento
+### Organizações
+- `GET /api/organizations` - Listar organizações
+- `POST /api/organizations` - Criar organização
+- `GET /api/organizations/:id` - Obter organização
+- `PUT /api/organizations/:id` - Atualizar organização
 
-### 1. Gestão de Pacientes
-- Cadastro completo de pacientes
-- Histórico médico e odontológico
-- Upload de exames e radiografias
-- Fichas clínicas detalhadas
+### Teste
+- `GET /api/status` - Status da API
+- `GET /api/test-supabase` - Testar conexão Supabase
 
-### 2. Sistema de Agendamento
-- Calendário interativo
-- Agendamento online para pacientes
-- Notificações automáticas (SMS/Email/WhatsApp)
-- Controle de disponibilidade
+## 🔄 Migração MongoDB → Supabase
 
-### 3. Módulo Financeiro
-- Controle de pagamentos e recebimentos
-- Emissão de recibos e notas fiscais
-- Relatórios financeiros
-- Integração com sistemas de pagamento
+Este projeto foi migrado do MongoDB para Supabase. As principais mudanças:
 
-### 4. Relatórios e Analytics
-- Dashboard com estatísticas
-- Relatórios de produtividade
-- Análise de faturamento
-- Métricas de pacientes
+### ✅ Implementado
+- ✅ Configuração completa do Supabase
+- ✅ Todos os controllers migrados
+- ✅ Middleware de autenticação atualizado
+- ✅ Estrutura de tabelas PostgreSQL
+- ✅ Variáveis de ambiente configuradas
+- ✅ Limpeza de código legado
 
-## 🆘 Suporte e Troubleshooting
+### 🗑️ Removido
+- ❌ Dependência do mongoose
+- ❌ Models do Mongoose
+- ❌ Configuração do MongoDB
+- ❌ Arquivos duplicados (*-supabase.js)
 
-### Problemas Comuns
+## 🚨 Notas Importantes
 
-**Erro de conexão com API:**
-- Verificar se o backend está rodando na porta 3001
-- Confirmar variáveis de ambiente
-- Verificar configurações de CORS
+1. **Banco de Dados**: Execute o SQL em `create-tables.sql` no Supabase
+2. **Variáveis**: Configure todas as variáveis de ambiente
+3. **Credenciais**: Nunca commite credenciais no código
+4. **CORS**: Frontend URL deve estar configurada no backend
 
-**Erro no MongoDB:**
-- Verificar string de conexão no .env
-- Confirmar se o IP está liberado no MongoDB Atlas
-- Verificar se o cluster está ativo
+## 📝 Licença
 
-**PWA não instala no iPhone:**
-- Usar obrigatoriamente o Safari
-- Certificar que está acessando via HTTPS em produção
-- Verificar se o manifest.json está configurado corretamente
-
-## 📄 Licença
-
-Este projeto foi desenvolvido para uso em consultórios odontológicos. Todos os direitos reservados.
-
----
-
-## 🔗 Links Úteis
-
-- [Railway Documentation](https://docs.railway.app/)
-- [Vercel Documentation](https://vercel.com/docs)
-- [MongoDB Atlas](https://www.mongodb.com/atlas)
-- [React Documentation](https://react.dev/)
-- [Node.js Documentation](https://nodejs.org/docs/)
-
----
-
-**Desenvolvido com ❤️ para facilitar a gestão de consultórios odontológicos**
+ISC License - Thales Ribeiro

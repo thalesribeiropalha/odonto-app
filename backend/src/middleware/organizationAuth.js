@@ -1,10 +1,10 @@
-const Organization = require('../models/Organization');
+const { supabase } = require('../config/supabase');
 
 // Middleware para verificar se o usuário pertence a uma organização ativa
 const organizationAuth = async (req, res, next) => {
   try {
     // 1. Verificar se o usuário tem organização
-    if (!req.user.organization?.id) {
+    if (!req.user.organizationId) {
       return res.status(403).json({
         success: false,
         message: 'Usuário não pertence a uma organização'
@@ -12,8 +12,14 @@ const organizationAuth = async (req, res, next) => {
     }
     
     // 2. Verificar se a organização existe e está ativa
-    const organization = await Organization.findById(req.user.organization.id);
-    if (!organization || !organization.isActive) {
+    const { data: organization, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', req.user.organizationId)
+      .eq('is_active', true)
+      .single();
+
+    if (error || !organization) {
       return res.status(403).json({
         success: false,
         message: 'Organização inativa ou não encontrada'
@@ -21,7 +27,7 @@ const organizationAuth = async (req, res, next) => {
     }
     
     // 3. Verificar plano ativo
-    if (organization.subscription.expiresAt < new Date()) {
+    if (organization.subscription?.expiresAt && new Date(organization.subscription.expiresAt) < new Date()) {
       return res.status(403).json({
         success: false,
         message: 'Plano expirado. Renove sua assinatura.'
@@ -29,7 +35,7 @@ const organizationAuth = async (req, res, next) => {
     }
     
     // 4. Verificar se o plano está ativo
-    if (!organization.subscription.isActive) {
+    if (organization.subscription && !organization.subscription.isActive) {
       return res.status(403).json({
         success: false,
         message: 'Plano inativo. Entre em contato com o suporte.'
@@ -38,8 +44,8 @@ const organizationAuth = async (req, res, next) => {
     
     // 5. Adicionar organização ao request
     req.organization = organization;
-    req.userRole = req.user.organization.role;
-    req.userPermissions = req.user.organization.permissions || [];
+    req.userRole = req.user.role;
+    req.userPermissions = req.user.permissions || [];
     
     next();
   } catch (error) {

@@ -1,13 +1,21 @@
-const Organization = require('../models/Organization');
-const User = require('../models/User');
-const { getAllPermissions, getDefaultPermissions } = require('../middleware/organizationAuth');
+const { supabase } = require('../config/supabase');
+
+// Obter permissões padrão por role
+const getDefaultPermissions = (role) => {
+  const permissions = {
+    owner: ['users.create', 'users.read', 'users.update', 'users.delete', 'organization.manage', 'reports.read', 'settings.update'],
+    admin: ['users.create', 'users.read', 'users.update', 'users.delete', 'reports.read'],
+    dentist: ['users.read', 'patients.create', 'patients.read', 'patients.update', 'appointments.create', 'appointments.read', 'appointments.update'],
+    secretary: ['users.read', 'patients.read', 'appointments.create', 'appointments.read', 'appointments.update']
+  };
+  return permissions[role] || [];
+};
 
 // Criar nova organização (durante registro)
 const createOrganization = async (req, res) => {
   try {
     const { name, document, email, phone, address } = req.body;
     
-    // Validações básicas
     if (!name || !email) {
       return res.status(400).json({
         success: false,
@@ -16,7 +24,12 @@ const createOrganization = async (req, res) => {
     }
     
     // Verificar se já existe organização com este email
-    const existingOrg = await Organization.findOne({ email: email.toLowerCase() });
+    const { data: existingOrg } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single();
+
     if (existingOrg) {
       return res.status(400).json({
         success: false,
@@ -37,293 +50,440 @@ const createOrganization = async (req, res) => {
     let counter = 1;
     
     // Verificar se slug já existe e gerar um único
-    while (await Organization.findOne({ slug })) {
+    while (true) {
+      const { data: existingSlug } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('slug', slug)
+        .single();
+      
+      if (!existingSlug) break;
+      
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
     
     // Criar organização
-    const organization = await Organization.create({
-      name: name.trim(),
-      slug,
-      document: document?.trim(),
-      email: email.toLowerCase().trim(),
-      phone: phone?.trim(),
-      address: address || {},
-      createdBy: req.user._id,
-      subscription: {
-        plan: 'starter',
-        maxUsers: 5,
-        maxPatients: 100,
-        features: ['basic'],
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
-        isActive: true
-      }
-    });
+    const { data: organization, error } = await supabase
+      .from('organizations')
+      .insert([{
+        name: name.trim(),
+        slug,
+        document: document?.trim(),
+        email: email.toLowerCase().trim(),
+        phone: phone?.trim(),
+        address: address || {},
+        created_by: req.user.id,
+        subscription: {
+          plan: 'starter',
+          maxUsers: 5,
+          maxPatients: 100,
+          features: ['basic'],
+          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          isActive: true
+        },
+        is_active: true
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao criar organização:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao criar organização',
+        error: error.message
+      });
+    }
     
     // Atualizar usuário como owner da organização
-    await User.findByIdAndUpdate(req.user._id, {
-      'organization.id': organization._id,
-      'organization.role': 'owner',
-      'organization.permissions': getAllPermissions(),
-      'organization.joinedAt': new Date()
-    });
-    
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        organization_id: organization.id,
+        role: 'owner',
+        permissions: getDefaultPermissions('owner')
+      })
+      .eq('id', req.user.id);
+
+    if (updateError) {
+      console.error('Erro ao atualizar usuário:', updateError);
+      return res.status(500).json({
+        success: false,
+        message: 'Organização criada, mas erro ao atualizar usuário',
+        error: updateError.message
+      });
+    }
+
     res.status(201).json({
       success: true,
       message: 'Organização criada com sucesso',
       organization: {
-        id: organization._id,
+        id: organization.id,
         name: organization.name,
         slug: organization.slug,
         email: organization.email,
-        subscription: organization.subscription
+        phone: organization.phone,
+        document: organization.document,
+        address: organization.address,
+        subscription: organization.subscription,
+        isActive: organization.is_active,
+        createdAt: organization.created_at
       }
     });
   } catch (error) {
     console.error('Erro ao criar organização:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao criar organização',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
 };
 
-// Obter dados da organização atual
+// Listar organizações (para admin do sistema)
+const getOrganizations = async (req, res) => {
+  try {
+    const { search, status, page = 1, limit = 10 } = req.query;
+    
+    let query = supabase
+      .from('organizations')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    // Aplicar filtros
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`);
+    }
+    
+    if (status && status !== 'all') {
+      const isActive = status === 'active';
+      query = query.eq('is_active', isActive);
+    }
+
+    // Paginação
+    const offset = (page - 1) * limit;
+    query = query.range(offset, offset + limit - 1);
+
+    const { data: organizations, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar organizações:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar organizações',
+        error: error.message
+      });
+    }
+
+    res.json({
+      success: true,
+      total: organizations.length,
+      organizations: organizations.map(org => ({
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        email: org.email,
+        phone: org.phone,
+        document: org.document,
+        address: org.address,
+        subscription: org.subscription,
+        isActive: org.is_active,
+        createdAt: org.created_at,
+        createdBy: org.created_by
+      }))
+    });
+  } catch (error) {
+    console.error('Erro ao buscar organizações:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+};
+
+// Obter organização específica
 const getOrganization = async (req, res) => {
   try {
-    const organization = req.organization;
+    const { id } = req.params;
     
-    // Contar usuários ativos
-    const activeUsers = await User.countDocuments({
-      'organization.id': organization._id,
-      isActive: true
-    });
-    
+    const { data: organization, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Erro ao buscar organização:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar organização',
+        error: error.message
+      });
+    }
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: 'Organização não encontrada'
+      });
+    }
+
     res.json({
       success: true,
       organization: {
-        id: organization._id,
+        id: organization.id,
         name: organization.name,
         slug: organization.slug,
-        document: organization.document,
         email: organization.email,
         phone: organization.phone,
+        document: organization.document,
         address: organization.address,
-        settings: organization.settings,
         subscription: organization.subscription,
-        createdAt: organization.createdAt,
-        stats: {
-          activeUsers,
-          maxUsers: organization.subscription.maxUsers,
-          usagePercentage: Math.round((activeUsers / organization.subscription.maxUsers) * 100)
-        }
+        isActive: organization.is_active,
+        createdAt: organization.created_at,
+        createdBy: organization.created_by
       }
     });
   } catch (error) {
     console.error('Erro ao buscar organização:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar dados da organização',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
 };
 
-// Atualizar configurações da organização
+// Atualizar organização
 const updateOrganization = async (req, res) => {
   try {
+    const { id } = req.params;
     const { name, document, email, phone, address, settings } = req.body;
-    const organizationId = req.organization._id;
     
-    // Validações básicas
     if (!name || !email) {
       return res.status(400).json({
         success: false,
-        message: 'Nome e email são obrigatórios'
+        message: 'Nome e email da organização são obrigatórios'
       });
     }
     
-    // Verificar se email já existe em outra organização
-    const existingOrg = await Organization.findOne({ 
-      email: email.toLowerCase(),
-      _id: { $ne: organizationId }
-    });
+    // Verificar se a organização existe
+    const { data: existingOrg, error: fetchError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingOrg) {
+      return res.status(404).json({
+        success: false,
+        message: 'Organização não encontrada'
+      });
+    }
     
-    if (existingOrg) {
+    // Verificar se já existe outra organização com este email
+    const { data: emailCheck } = await supabase
+      .from('organizations')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .neq('id', id)
+      .single();
+
+    if (emailCheck) {
       return res.status(400).json({
         success: false,
-        message: 'Este email já está sendo usado por outra organização'
+        message: 'Já existe outra organização com este email'
       });
     }
     
     // Atualizar organização
-    const updatedOrganization = await Organization.findByIdAndUpdate(
-      organizationId,
-      {
+    const { data: organization, error } = await supabase
+      .from('organizations')
+      .update({
         name: name.trim(),
         document: document?.trim(),
         email: email.toLowerCase().trim(),
         phone: phone?.trim(),
-        address: address || {},
-        settings: settings || {}
-      },
-      { new: true, runValidators: true }
-    );
-    
+        address: address || existingOrg.address,
+        settings: settings || existingOrg.settings,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar organização:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao atualizar organização',
+        error: error.message
+      });
+    }
+
     res.json({
       success: true,
       message: 'Organização atualizada com sucesso',
       organization: {
-        id: updatedOrganization._id,
-        name: updatedOrganization.name,
-        slug: updatedOrganization.slug,
-        document: updatedOrganization.document,
-        email: updatedOrganization.email,
-        phone: updatedOrganization.phone,
-        address: updatedOrganization.address,
-        settings: updatedOrganization.settings
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        email: organization.email,
+        phone: organization.phone,
+        document: organization.document,
+        address: organization.address,
+        settings: organization.settings,
+        subscription: organization.subscription,
+        isActive: organization.is_active,
+        createdAt: organization.created_at,
+        updatedAt: organization.updated_at
       }
     });
   } catch (error) {
     console.error('Erro ao atualizar organização:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao atualizar organização',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
 };
 
-// Criar usuário na organização (SIMPLIFICADO)
-const createOrganizationUser = async (req, res) => {
+// Deletar organização
+const deleteOrganization = async (req, res) => {
   try {
-    const { name, email, password, role, profile } = req.body;
+    const { id } = req.params;
     
-    // Validações básicas
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({
+    // Verificar se a organização existe
+    const { data: existingOrg, error: fetchError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingOrg) {
+      return res.status(404).json({
         success: false,
-        message: 'Nome, email, senha e função são obrigatórios'
+        message: 'Organização não encontrada'
       });
     }
     
-    // Verificar limite de usuários
-    const currentUsers = await User.countDocuments({
-      'organization.id': req.organization._id,
-      isActive: true
-    });
-    
-    if (currentUsers >= req.organization.subscription.maxUsers) {
+    // Verificar se há usuários vinculados à organização
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('organization_id', id)
+      .limit(1);
+
+    if (usersError) {
+      console.error('Erro ao verificar usuários:', usersError);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao verificar usuários da organização'
+      });
+    }
+
+    if (users && users.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Limite de usuários atingido (${req.organization.subscription.maxUsers})`
+        message: 'Não é possível deletar organização com usuários vinculados'
       });
     }
     
-    // Verificar se email já existe
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
-      return res.status(400).json({
+    // Deletar organização
+    const { error } = await supabase
+      .from('organizations')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Erro ao deletar organização:', error);
+      return res.status(500).json({
         success: false,
-        message: 'Este email já está sendo usado'
+        message: 'Erro ao deletar organização',
+        error: error.message
       });
     }
-    
-    // Criar usuário diretamente na organização
-    const newUser = await User.create({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      password,
-      organization: {
-        id: req.organization._id,
-        role,
-        permissions: getDefaultPermissions(role),
-        joinedAt: new Date(),
-        createdBy: req.user._id
-      },
-      profile: profile || {},
-      isActive: true
-    });
-    
-    // Retornar usuário sem senha
-    const userResponse = await User.findById(newUser._id).select('-password');
-    
-    res.status(201).json({
+
+    res.json({
       success: true,
-      message: 'Usuário criado com sucesso',
-      user: {
-        id: userResponse._id,
-        name: userResponse.name,
-        email: userResponse.email,
-        role: userResponse.organization.role,
-        permissions: userResponse.organization.permissions,
-        isActive: userResponse.isActive,
-        createdAt: userResponse.createdAt,
-        profile: userResponse.profile
+      message: 'Organização deletada com sucesso'
+    });
+  } catch (error) {
+    console.error('Erro ao deletar organização:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+};
+
+// Ativar/Desativar organização
+const toggleOrganizationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Verificar se a organização existe
+    const { data: existingOrg, error: fetchError } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingOrg) {
+      return res.status(404).json({
+        success: false,
+        message: 'Organização não encontrada'
+      });
+    }
+    
+    // Alternar status
+    const newStatus = !existingOrg.is_active;
+    
+    const { data: organization, error } = await supabase
+      .from('organizations')
+      .update({
+        is_active: newStatus,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao alterar status da organização:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao alterar status da organização',
+        error: error.message
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Organização ${newStatus ? 'ativada' : 'desativada'} com sucesso`,
+      organization: {
+        id: organization.id,
+        name: organization.name,
+        slug: organization.slug,
+        email: organization.email,
+        phone: organization.phone,
+        document: organization.document,
+        address: organization.address,
+        subscription: organization.subscription,
+        isActive: organization.is_active,
+        createdAt: organization.created_at,
+        updatedAt: organization.updated_at
       }
     });
   } catch (error) {
-    console.error('Erro ao criar usuário:', error);
+    console.error('Erro ao alterar status da organização:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao criar usuário',
-      error: error.message
-    });
-  }
-};
-
-// Listar usuários da organização
-const getOrganizationUsers = async (req, res) => {
-  try {
-    const { search, role, status } = req.query;
-    
-    // Filtro base: sempre pela organização
-    let filter = {
-      'organization.id': req.organization._id
-    };
-    
-    // Aplicar filtros adicionais
-    if (search) {
-      filter.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
-    
-    if (role && role !== 'all') {
-      filter['organization.role'] = role;
-    }
-    
-    if (status && status !== 'all') {
-      filter.isActive = status === 'active';
-    }
-    
-    const users = await User.find(filter, {
-      password: 0 // Nunca retornar senhas
-    }).sort({ createdAt: -1 });
-    
-    res.json({
-      success: true,
-      total: users.length,
-      users: users.map(user => ({
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.organization.role,
-        permissions: user.organization.permissions,
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        lastLogin: user.lastLogin,
-        profile: user.profile
-      }))
-    });
-  } catch (error) {
-    console.error('Erro ao buscar usuários:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao buscar usuários',
+      message: 'Erro interno do servidor',
       error: error.message
     });
   }
@@ -331,8 +491,9 @@ const getOrganizationUsers = async (req, res) => {
 
 module.exports = {
   createOrganization,
+  getOrganizations,
   getOrganization,
   updateOrganization,
-  createOrganizationUser,
-  getOrganizationUsers
+  deleteOrganization,
+  toggleOrganizationStatus
 };

@@ -100,7 +100,7 @@ router.get('/test', (req, res) => {
     success: true,
     message: 'Debug API funcionando!',
     timestamp: new Date().toISOString(),
-    mode: process.env.MONGODB_URI ? 'MONGODB' : 'DEMO'
+    mode: process.env.SUPABASE_URL ? 'SUPABASE' : 'DEMO'
   });
 });
 
