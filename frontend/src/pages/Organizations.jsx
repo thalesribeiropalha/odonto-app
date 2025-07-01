@@ -25,7 +25,7 @@ const Organizations = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const isAdmin = user?.role === 'admin';
-  const isOwner = user?.organization?.role === 'owner';
+  const isOwner = user?.role === 'owner';
 
   useEffect(() => {
     fetchData();
@@ -52,12 +52,12 @@ const Organizations = () => {
 
   const handleToggleStatus = async (organization) => {
     try {
-      const response = await toggleOrganizationStatus(organization._id);
+      const response = await toggleOrganizationStatus(organization.id);
       
       if (response.success) {
         if (isAdmin) {
           setOrganizations(prev => prev.map(org => 
-            org._id === organization._id ? response.organization : org
+            org.id === organization.id ? response.organization : org
           ));
         } else {
           setMyOrganization(response.organization);
@@ -85,10 +85,10 @@ const Organizations = () => {
     }
 
     try {
-      const response = await deleteOrganization(organization._id);
+      const response = await deleteOrganization(organization.id);
       
       if (response.success) {
-        setOrganizations(prev => prev.filter(org => org._id !== organization._id));
+        setOrganizations(prev => prev.filter(org => org.id !== organization.id));
         alert('Organização deletada com sucesso!');
       }
     } catch (error) {
@@ -102,12 +102,12 @@ const Organizations = () => {
       let response;
       
       if (editingOrganization) {
-        response = await updateOrganization(editingOrganization._id, formData);
+        response = await updateOrganization(editingOrganization.id, formData);
         
         if (response.success) {
           if (isAdmin) {
             setOrganizations(prev => prev.map(org => 
-              org._id === editingOrganization._id ? response.organization : org
+              org.id === editingOrganization.id ? response.organization : org
             ));
           } else {
             setMyOrganization(response.organization);
@@ -217,7 +217,126 @@ const Organizations = () => {
             </button>
           </div>
 
-          <p>Interface de administração em desenvolvimento. Funcionalidades básicas disponíveis.</p>
+          {/* Tabela de organizações para admin */}
+          <div style={{ 
+            backgroundColor: 'white', 
+            border: '1px solid #dee2e6', 
+            borderRadius: '8px',
+            overflow: 'hidden'
+          }}>
+            {filteredOrganizations.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center' }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏢</div>
+                <h3>Nenhuma organização encontrada</h3>
+                <p style={{ color: '#666', marginBottom: '20px' }}>
+                  {searchTerm ? 'Nenhuma organização corresponde à sua busca.' : 'Ainda não há organizações cadastradas.'}
+                </p>
+                <button onClick={handleCreateOrganization} className="btn btn-primary">
+                  ➕ Criar Primeira Organização
+                </button>
+              </div>
+            ) : (
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead style={{ backgroundColor: '#f8f9fa' }}>
+                  <tr>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Nome</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
+                    <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Plano</th>
+                    <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Status</th>
+                    <th style={{ padding: '12px', textAlign: 'center', borderBottom: '1px solid #dee2e6' }}>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredOrganizations.map((org) => (
+                    <tr key={org.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      <td style={{ padding: '12px' }}>
+                        <div>
+                          <strong>{org.name}</strong>
+                          {org.document && (
+                            <div style={{ fontSize: '12px', color: '#666' }}>
+                              CNPJ: {org.document}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: '12px' }}>{org.email}</td>
+                      <td style={{ padding: '12px' }}>
+                        <span style={{ 
+                          backgroundColor: getPlanColor(org.subscription?.plan),
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px'
+                        }}>
+                          {getPlanDisplayName(org.subscription?.plan)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <span style={{ 
+                          backgroundColor: getStatusColor(org.isActive),
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '4px',
+                          fontSize: '12px'
+                        }}>
+                          {getStatusDisplayName(org.isActive)}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'center' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                          <button
+                            onClick={() => handleEditOrganization(org)}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#007bff',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}
+                            title="Editar"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(org)}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: org.isActive ? '#dc3545' : '#28a745',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}
+                            title={org.isActive ? 'Desativar' : 'Ativar'}
+                          >
+                            {org.isActive ? '🔒' : '🔓'}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteOrganization(org)}
+                            style={{
+                              padding: '4px 8px',
+                              backgroundColor: '#dc3545',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px'
+                            }}
+                            title="Deletar"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       ) : isOwner ? (
         <div>
