@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { supabase } = require('../config/supabase');
+const { supabase, supabaseAdmin } = require('../config/supabase');
 
 const router = express.Router();
 
@@ -15,8 +15,8 @@ router.post('/fix-admin-password', async (req, res) => {
     console.log('Tentando atualizar senha do admin...');
     console.log('Novo hash:', hashedPassword);
     
-    // Usar o cliente service_role se disponível, ou tentar com o cliente normal
-    const { data, error } = await supabase
+    // Usar o cliente administrativo para bypass RLS
+    const { data, error } = await supabaseAdmin
       .from('users')
       .update({ password: hashedPassword })
       .eq('email', 'admin@clinicademo.com')
