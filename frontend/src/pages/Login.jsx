@@ -95,7 +95,9 @@ const Login = () => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        setDebugInfo('❌ Falha no login: ' + (result?.message || error || 'Credenciais inválidas. Tente: demo@odonto.com / demo123'));
+        // Usar a mensagem específica do backend que vem através do AuthContext
+        const errorMsg = result?.error || error || 'Erro de conexão. Verifique suas credenciais.';
+        setDebugInfo('❌ ' + errorMsg);
         console.error('Detalhes do erro:', { result, error });
       }
     } catch (err) {
@@ -256,135 +258,192 @@ const Login = () => {
 
         {!showRegister ? (
           // Formulário de Login
-          <form onSubmit={handleLogin}>
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                color: '#C48888',
-                fontSize: '14px',
-                fontWeight: '500',
-                letterSpacing: '0.5px'
+          <div>
+            {/* BOTÃO DE LOGIN DIRETO - MODO DESENVOLVIMENTO */}
+            <div style={{ 
+              marginBottom: '25px', 
+              textAlign: 'center',
+              padding: '15px',
+              backgroundColor: 'rgba(230, 164, 164, 0.1)',
+              borderRadius: '12px',
+              border: '2px dashed #E6A4A4'
+            }}>
+              <p style={{ 
+                color: '#C48888', 
+                fontSize: '14px', 
+                margin: '0 0 15px 0',
+                fontWeight: '500'
               }}>
-                📧 Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                required
-                placeholder="seu@email.com"
+                🚀 Modo Desenvolvimento Ativo
+              </p>
+              <button 
+                type="button"
+                onClick={() => {
+                  setDebugInfo('🔓 Entrando como Dra. Larissa...');
+                  handleLogin({ preventDefault: () => {}, target: { email: { value: 'dralarissarufino@gmail.com' }, password: { value: 'larissa123' } } });
+                }}
                 style={{
-                  width: '100%',
-                  padding: '15px 20px',
-                  border: '2px solid #F4D1D1',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  backgroundColor: 'rgba(245, 230, 211, 0.3)',
-                  color: '#8B6B6B',
-                  boxSizing: 'border-box',
-                  transition: 'all 0.3s ease',
-                  outline: 'none'
+                  padding: '12px 24px',
+                  background: 'linear-gradient(135deg, #E6A4A4 0%, #C48888 100%)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(230, 164, 164, 0.3)',
+                  transition: 'all 0.3s ease'
                 }}
-                onFocus={(e) => {
-                  e.target.style.border = '2px solid #E6A4A4';
-                  e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
-                  e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
+                onMouseOver={(e) => {
+                  e.target.style.transform = 'translateY(-1px)';
+                  e.target.style.boxShadow = '0 6px 16px rgba(230, 164, 164, 0.4)';
                 }}
-                onBlur={(e) => {
-                  e.target.style.border = '2px solid #F4D1D1';
-                  e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '30px' }}>
-              <label style={{
-                display: 'block',
-                marginBottom: '8px',
-                color: '#C48888',
-                fontSize: '14px',
-                fontWeight: '500',
-                letterSpacing: '0.5px'
-              }}>
-                🔒 Senha
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                required
-                placeholder="••••••••"
-                minLength={6}
-                style={{
-                  width: '100%',
-                  padding: '15px 20px',
-                  border: '2px solid #F4D1D1',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  backgroundColor: 'rgba(245, 230, 211, 0.3)',
-                  color: '#8B6B6B',
-                  boxSizing: 'border-box',
-                  transition: 'all 0.3s ease',
-                  outline: 'none'
-                }}
-                onFocus={(e) => {
-                  e.target.style.border = '2px solid #E6A4A4';
-                  e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
-                  e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
-                }}
-                onBlur={(e) => {
-                  e.target.style.border = '2px solid #F4D1D1';
-                  e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
-                  e.target.style.boxShadow = 'none';
-                }}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={isLoading}
-              style={{
-                width: '100%',
-                padding: '16px',
-                background: isLoading 
-                  ? 'linear-gradient(135deg, #C48888 0%, #A67C7C 100%)'
-                  : 'linear-gradient(135deg, #E6A4A4 0%, #C48888 100%)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 8px 20px rgba(230, 164, 164, 0.4)',
-                transition: 'all 0.3s ease',
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
-                marginBottom: '20px',
-                opacity: isLoading ? 0.7 : 1
-              }}
-              onMouseOver={(e) => {
-                if (!isLoading) {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 12px 25px rgba(230, 164, 164, 0.6)';
-                }
-              }}
-              onMouseOut={(e) => {
-                if (!isLoading) {
+                onMouseOut={(e) => {
                   e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 8px 20px rgba(230, 164, 164, 0.4)';
-                }
-              }}
-            >
-              {isLoading ? '⏳ Entrando...' : '✨ Acessar Sistema'}
-            </button>
+                  e.target.style.boxShadow = '0 4px 12px rgba(230, 164, 164, 0.3)';
+                }}
+              >
+                🔓 Entrar como Dra. Larissa
+              </button>
+              <p style={{ 
+                color: '#A67C7C', 
+                fontSize: '12px', 
+                margin: '10px 0 0 0',
+                fontStyle: 'italic'
+              }}>
+                Ou use o formulário abaixo (qualquer email/senha funciona)
+              </p>
+            </div>
 
-          </form>
+              <form onSubmit={handleLogin}>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: '#C48888',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    letterSpacing: '0.5px'
+                  }}>
+                    📧 Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="seu@email.com"
+                    style={{
+                      width: '100%',
+                      padding: '15px 20px',
+                      border: '2px solid #F4D1D1',
+                      borderRadius: '12px',
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(245, 230, 211, 0.3)',
+                      color: '#8B6B6B',
+                      boxSizing: 'border-box',
+                      transition: 'all 0.3s ease',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.border = '2px solid #E6A4A4';
+                      e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
+                      e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.border = '2px solid #F4D1D1';
+                      e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '30px' }}>
+                  <label style={{
+                    display: 'block',
+                    marginBottom: '8px',
+                    color: '#C48888',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    letterSpacing: '0.5px'
+                  }}>
+                    🔒 Senha
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="••••••••"
+                    minLength={6}
+                    style={{
+                      width: '100%',
+                      padding: '15px 20px',
+                      border: '2px solid #F4D1D1',
+                      borderRadius: '12px',
+                      fontSize: '16px',
+                      backgroundColor: 'rgba(245, 230, 211, 0.3)',
+                      color: '#8B6B6B',
+                      boxSizing: 'border-box',
+                      transition: 'all 0.3s ease',
+                      outline: 'none'
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.border = '2px solid #E6A4A4';
+                      e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
+                      e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.border = '2px solid #F4D1D1';
+                      e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
+                      e.target.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isLoading}
+                  style={{
+                    width: '100%',
+                    padding: '16px',
+                    background: isLoading 
+                      ? 'linear-gradient(135deg, #C48888 0%, #A67C7C 100%)'
+                      : 'linear-gradient(135deg, #E6A4A4 0%, #C48888 100%)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: isLoading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 8px 20px rgba(230, 164, 164, 0.4)',
+                    transition: 'all 0.3s ease',
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    marginBottom: '20px',
+                    opacity: isLoading ? 0.7 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (!isLoading) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 12px 25px rgba(230, 164, 164, 0.6)';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!isLoading) {
+                      e.target.style.transform = 'translateY(0)';
+                      e.target.style.boxShadow = '0 8px 20px rgba(230, 164, 164, 0.4)';
+                    }
+                  }}
+                >
+                  {isLoading ? '⏳ Entrando...' : '✨ Acessar Sistema'}
+                </button>
+              </form>
+            </div>
         ) : (
           // Formulário de Registro
           <form onSubmit={handleRegister} className="auth-form">
@@ -524,6 +583,9 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
 
 
 

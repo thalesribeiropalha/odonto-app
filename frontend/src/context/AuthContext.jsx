@@ -16,6 +16,21 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // DADOS FIXOS PARA DESENVOLVIMENTO - DRA. LARISSA
+  const FIXED_USER_DATA = {
+    id: "13cb3351-cc5f-4a24-9220-6b922e2fac7e",
+    name: "Dra Larissa Rufino",
+    email: "dralarissarufino@gmail.com",
+    role: "dentist",
+    organization_id: "fc380e62-de4e-495d-9914-d5fbb5447058",
+    permissions: ["patients.read", "patients.create", "patients.update", "patients.delete"],
+    is_active: true,
+    profile: {
+      cro: "CRO-SP 123456",
+      specialty: "Ortodontia • Cirurgia • Estética"
+    }
+  };
+
   useEffect(() => {
     // Verificar se existe token no localStorage ao carregar a aplicação
     checkAuthState();
@@ -27,17 +42,36 @@ export const AuthProvider = ({ children }) => {
       const storedUser = localStorage.getItem('odonto-user');
       
       if (storedToken && storedUser) {
-        // Verificar se o token ainda é válido
-        const response = await apiService.verifyToken();
-        if (response.data.valid) {
+        // VERIFICAR SE É TOKEN FIXO DE DESENVOLVIMENTO
+        if (storedToken.startsWith('FIXED_TOKEN_LARISSA_DEV_')) {
+          // TOKEN FIXO SEMPRE VÁLIDO
+          console.log('🔓 Modo desenvolvimento: Token fixo detectado');
           setUser(JSON.parse(storedUser));
-        } else {
-          // Token inválido, limpar dados
-          clearAuthData();
+          setLoading(false);
+          return;
+        }
+        
+        // VERIFICAÇÃO NORMAL DE TOKEN PARA PRODUÇÃO
+        try {
+          const response = await apiService.verifyToken();
+          if (response.data.valid) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            clearAuthData();
+          }
+        } catch (apiError) {
+          // Se API falhar, mas token existe, tentar manter sessão
+          console.warn('API indisponível, mantendo sessão local:', apiError);
+          const userData = JSON.parse(storedUser);
+          if (userData && userData.email) {
+            setUser(userData);
+          } else {
+            clearAuthData();
+          }
         }
       }
     } catch (error) {
-      // Token inválido ou erro na verificação, limpar dados
+      console.warn('Erro ao verificar estado de auth:', error);
       clearAuthData();
     } finally {
       setLoading(false);
@@ -66,7 +100,17 @@ export const AuthProvider = ({ children }) => {
       
       return { success: true, user: userData };
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Erro ao fazer login';
+      // Capturar mensagens específicas do backend
+      let errorMessage = 'Erro ao fazer login';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -150,3 +194,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+
+
+
+

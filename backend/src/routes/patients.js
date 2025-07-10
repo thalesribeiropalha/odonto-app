@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, hasOperationalAccess, validateOrganizationAccess } = require('../middleware/auth');
 const { organizationAuth } = require('../middleware/organizationAuth');
 const {
   getPatients,
@@ -12,9 +12,13 @@ const {
   getPatientsStats
 } = require('../controllers/patientController');
 
-// Aplicar middlewares de autenticação e organização em todas as rotas
+// Todas as rotas protegidas por autenticação
 router.use(protect);
+router.use(validateOrganizationAccess);
 router.use(organizationAuth);
+
+// Aplicar controle de acesso operacional (admin, dentista, secretária, proprietário)
+router.use(hasOperationalAccess);
 
 // Rotas de pacientes
 
@@ -40,6 +44,7 @@ router.put('/:id', updatePatient);
 router.patch('/:id/toggle-status', togglePatientStatus);
 
 module.exports = router;
+
 
 
 

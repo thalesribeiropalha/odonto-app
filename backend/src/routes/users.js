@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
-const { organizationAuth, canManageUsers } = require('../middleware/organizationAuth');
+const { protect, hasAdminAccess, validateOrganizationAccess } = require('../middleware/auth');
+const { organizationAuth } = require('../middleware/organizationAuth');
 const {
   getUsers,
   createUser,
@@ -11,26 +11,31 @@ const {
   getUserStats
 } = require('../controllers/userController');
 
-// Todas as rotas protegidas por autenticação e organização
+// Todas as rotas protegidas por autenticação
 router.use(protect);
+router.use(validateOrganizationAccess);
 router.use(organizationAuth);
 
-// GET /api/users/stats - Obter estatísticas de usuários
+// Aplicar controle de acesso administrativo para todas as rotas de usuários
+router.use(hasAdminAccess);
+
+// GET /api/users/stats - Obter estatísticas de usuários (admin+)
 router.get('/stats', getUserStats);
 
-// GET /api/users - Listar usuários da organização
+// GET /api/users - Listar usuários da organização (admin+)
 router.get('/', getUsers);
 
-// POST /api/users - Criar novo usuário (apenas admin/owner)
-router.post('/', canManageUsers, createUser);
+// POST /api/users - Criar novo usuário (admin+)
+router.post('/', createUser);
 
-// GET /api/users/:id - Buscar usuário específico
+// GET /api/users/:id - Buscar usuário específico (admin+)
 router.get('/:id', getUser);
 
-// PUT /api/users/:id - Atualizar usuário (apenas admin/owner)
-router.put('/:id', canManageUsers, updateUser);
+// PUT /api/users/:id - Atualizar usuário (admin+)
+router.put('/:id', updateUser);
 
-// DELETE /api/users/:id - Deletar usuário (apenas admin/owner)
-router.delete('/:id', canManageUsers, deleteUser);
+// DELETE /api/users/:id - Deletar usuário (admin+)
+router.delete('/:id', deleteUser);
 
 module.exports = router;
+

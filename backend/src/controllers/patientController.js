@@ -15,7 +15,21 @@ const getPatients = async (req, res) => {
     let query = supabaseAdmin
       .from('patients')
       .select(`
-        *,
+        id,
+        name,
+        email,
+        phone,
+        document,
+        birth_date,
+        gender,
+        address,
+        emergency_contact,
+        notes,
+        organization_id,
+        created_by,
+        is_active,
+        created_at,
+        updated_at,
         created_by:created_by (name)
       `)
       .eq('organization_id', organization_id)
@@ -487,6 +501,7 @@ module.exports = {
   searchPatients,
   getPatientsStats
 };
+
 
 
 

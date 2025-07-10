@@ -1,5 +1,7 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -9,6 +11,8 @@ const corsOptions = {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175',
+    'http://localhost:5176',
+    'http://localhost:5177',
     'https://odonto-app-eight.vercel.app',
     process.env.FRONTEND_URL,
     'https://odonto-app-git-main-thalesribeiropalha.vercel.app/'
@@ -46,6 +50,41 @@ app.use('/api/fix', fixAdminRoutes);
 app.use('/api/debug-auth', debugAuthRoutes);
 app.use('/api/patients', patientRoutes);
 
+// Middleware condicional para servir frontend (apenas se dist/ existir)
+const frontendDistPath = path.resolve(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDistPath)) {
+  console.log('🎯 Modo Unified: Servindo frontend estático de', frontendDistPath);
+  
+  // Servir arquivos estáticos
+  app.use(express.static(frontendDistPath));
+  
+  // SPA fallback - deve vir depois de todas as rotas da API
+  app.get('*', (req, res) => {
+    // Evitar interceptar rotas da API
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ 
+        message: 'API route not found',
+        path: req.path 
+      });
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  console.log('🔀 Modo Split: Frontend dist não encontrado, executando apenas API');
+  
+  // Rota 404 para modo split
+  app.use((req, res) => {
+    res.status(404).json({
+      message: 'Rota não encontrada',
+      availableRoutes: [
+        'GET /api/status',
+        'POST /api/auth/login',
+        'POST /api/auth/register'
+      ]
+    });
+  });
+}
+
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -55,19 +94,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Rota 404
-app.use((req, res) => {
-  res.status(404).json({
-    message: 'Rota não encontrada',
-    availableRoutes: [
-      'GET /api/status',
-      'POST /api/auth/login',
-      'POST /api/auth/register'
-    ]
-  });
-});
-
 module.exports = app;
+
+
+
+
 
 
 

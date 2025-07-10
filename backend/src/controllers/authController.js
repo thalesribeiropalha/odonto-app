@@ -108,25 +108,32 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Buscar usuário
+    // Buscar usuário pelo email
     const { data: user, error } = await supabase
       .from('users')
       .select('*')
       .eq('email', email.toLowerCase())
-      .eq('is_active', true)
       .single();
 
+    // 1. Usuário não encontrado
     if (error || !user) {
-      return res.status(401).json({
-        message: 'Credenciais inválidas'
+      return res.status(404).json({
+        message: 'Usuário não encontrado no sistema.'
+      });
+    }
+    
+    // 2. Usuário inativo
+    if (!user.is_active) {
+      return res.status(403).json({
+        message: 'Este usuário foi desativado. Contate o administrador.'
       });
     }
 
-    // Verificar senha
+    // 3. Senha incorreta
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
       return res.status(401).json({
-        message: 'Credenciais inválidas'
+        message: 'Senha incorreta. Por favor, tente novamente.'
       });
     }
 
@@ -335,3 +342,4 @@ module.exports = {
   getUserProfile,
   registerWithOrganization
 };
+

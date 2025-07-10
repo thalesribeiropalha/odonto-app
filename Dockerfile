@@ -1,20 +1,40 @@
-# Use Node.js 18 LTS
-FROM node:18-alpine
+# Stage 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
 
-# Set working directory
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source code
+COPY frontend/ ./
+
+# Build frontend for production
+RUN npm run build
+
+# Stage 2: Backend + Frontend Estático
+FROM node:18-alpine AS production
+
 WORKDIR /app
 
 # Copy backend package files
 COPY backend/package*.json ./
 
-# Install dependencies
+# Install backend production dependencies
 RUN npm ci --only=production
 
 # Copy backend source code
 COPY backend/ ./
 
-# Expose port
-EXPOSE 3001
+# Copy frontend build from stage 1
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Start the application
-CMD ["npm", "start"]
+# Expose port 3002 (conforme configuração atual)
+EXPOSE 3002
+
+# Start the unified application
+CMD ["npm", "run", "dev"]
+

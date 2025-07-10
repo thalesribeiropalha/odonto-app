@@ -13,7 +13,7 @@ export default defineConfig({
     host: true, // Para acessar via IP da rede local
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:3002',
         changeOrigin: true,
         secure: false,
       }
@@ -48,3 +48,4 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
   }
 })
+

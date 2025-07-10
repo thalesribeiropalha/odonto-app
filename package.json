@@ -1,0 +1,31 @@
+{
+  "name": "odonto-app",
+  "version": "1.0.0",
+  "description": "Sistema de gestão odontológica - Frontend + Backend unificado",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:unified": "npm run serve --prefix backend", 
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix backend",
+    "install:all": "npm install --prefix backend && npm install --prefix frontend",
+    "test": "npm run test --prefix backend && npm run test --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "odontologia",
+    "gestão",
+    "react",
+    "nodejs",
+    "express",
+    "fullstack"
+  ],
+  "author": "Thales Ribeiro",
+  "license": "ISC"
+}
+

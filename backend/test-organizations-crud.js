@@ -2,10 +2,10 @@ const axios = require('axios');
 
 const BASE_URL = 'http://localhost:3002';
 
-// Credenciais do usuário admin/owner
+// Credenciais do usuário owner
 const loginData = {
-  email: 'demo@odonto.com',
-  password: 'admin123'
+  email: 'owner@teste.com',
+  password: 'teste123'
 };
 
 let authToken = '';
@@ -375,5 +375,6 @@ async function runAllTests() {
 
 // Executar testes
 runAllTests().catch(console.error);
+
 
 

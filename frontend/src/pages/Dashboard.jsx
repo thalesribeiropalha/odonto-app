@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import OrganizationCard from '../components/OrganizationCard';
+import { AdminOnly, OperationalAccess } from '../components/ProtectedComponent';
+import usePermissions from '../hooks/usePermissions';
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -141,44 +143,47 @@ const Dashboard = () => {
                 </button>
               </div>
 
-              {/* Card de Organizações - Apenas para Admin e Owner */}
-              {(user?.role === 'admin' || user?.organization?.role === 'owner') && (
+              {/* Card de Organizações - Apenas para Admin e Proprietário */}
+              <AdminOnly>
                 <OrganizationCard 
-                  userRole={user?.role === 'admin' ? 'admin' : 'owner'}
+                  userRole={user?.role === 'owner' ? 'owner' : 'admin'}
                   onManageClick={() => navigate('/organizations')}
                 />
-              )}
+              </AdminOnly>
 
-              <div className="dashboard-card">
-                <h3 className="card-title">🔧 Configurações</h3>
-                <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-                  Gerencie as configurações do sistema
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                  <Link 
-                    to="/users"
-                    className="btn btn-primary" 
-                    style={{ 
-                      fontSize: '0.875rem',
-                      textDecoration: 'none',
-                      textAlign: 'center'
-                    }}
-                  >
-                    👥 Gerenciar Usuários
-                  </Link>
-                  <button 
-                    className="btn" 
-                    style={{ 
-                      fontSize: '0.875rem',
-                      backgroundColor: '#6b7280',
-                      color: 'white'
-                    }}
-                    disabled
-                  >
-                    Backup (Em breve)
-                  </button>
+              {/* Card de Configurações - Visível para todos, mas funcionalidades restritas */}
+              <AdminOnly>
+                <div className="dashboard-card">
+                  <h3 className="card-title">🔧 Configurações</h3>
+                  <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+                    Gerencie as configurações do sistema
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <Link 
+                      to="/users"
+                      className="btn btn-primary" 
+                      style={{ 
+                        fontSize: '0.875rem',
+                        textDecoration: 'none',
+                        textAlign: 'center'
+                      }}
+                    >
+                      👥 Gerenciar Usuários
+                    </Link>
+                    <button 
+                      className="btn" 
+                      style={{ 
+                        fontSize: '0.875rem',
+                        backgroundColor: '#6b7280',
+                        color: 'white'
+                      }}
+                      disabled
+                    >
+                      Backup (Em breve)
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </AdminOnly>
             </div>
 
             {/* Informações do Sistema */}
@@ -305,4 +310,7 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
 
