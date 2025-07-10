@@ -4,7 +4,33 @@ const cors = require('cors');
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'https://odonto-app-eight.vercel.app',
+    process.env.FRONTEND_URL,
+    'https://odonto-app-git-main-thalesribeiropalha.vercel.app/'
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+app.options('*', cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://localhost:5175',
+    'https://odonto-app-eight.vercel.app',
+    process.env.FRONTEND_URL,
+    'https://odonto-app-git-main-thalesribeiropalha.vercel.app/'
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -52,6 +78,7 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
 
 
 
