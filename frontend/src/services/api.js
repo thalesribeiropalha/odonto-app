@@ -51,11 +51,17 @@ export const apiService = {
   verifyToken: () => api.get('/api/auth/verify'),
   getProfile: () => api.get('/api/auth/profile'),
   
-  // Futuras funcionalidades (pacientes, consultas, etc.)
-  // getPatients: () => api.get('/api/patients'),
-  // createPatient: (patientData) => api.post('/api/patients', patientData),
-  // updatePatient: (id, patientData) => api.put(`/api/patients/${id}`, patientData),
-  // deletePatient: (id) => api.delete(`/api/patients/${id}`),
+  // Pacientes
+  getPatients: (params) => api.get('/api/patients', { params }),
+  getPatientById: (id) => api.get(`/api/patients/${id}`),
+  createPatient: (patientData) => api.post('/api/patients', patientData),
+  updatePatient: (id, patientData) => api.put(`/api/patients/${id}`, patientData),
+  togglePatientStatus: (id) => api.patch(`/api/patients/${id}/toggle-status`),
+  searchPatients: (params) => api.get('/api/patients/search', { params }),
+  getPatientsStats: () => api.get('/api/patients/stats'),
+  
+  // Futuras funcionalidades (consultas, agendamentos, etc.)
 };
 
 export default api;
+
