@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 
 // Middlewares
-app.use(cors({
+const corsOptions = {
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
@@ -13,24 +13,14 @@ app.use(cors({
     process.env.FRONTEND_URL,
     'https://odonto-app-git-main-thalesribeiropalha.vercel.app/'
   ].filter(Boolean),
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: "Content-Type,Authorization",
+  optionsSuccessStatus: 204
+};
 
-app.options('*', cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'https://odonto-app-eight.vercel.app',
-    process.env.FRONTEND_URL,
-    'https://odonto-app-git-main-thalesribeiropalha.vercel.app/'
-  ].filter(Boolean),
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -78,6 +68,7 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
 
 
 
