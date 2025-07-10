@@ -8,6 +8,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
+    'http://localhost:5175',
     'https://odonto-app-eight.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean),
@@ -60,6 +61,7 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
 
 
 

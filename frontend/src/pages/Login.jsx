@@ -148,28 +148,86 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="text-center mb-4">
-          <h1 className="auth-title">
-            🦷 Odonto App
-          </h1>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-            {showRegister ? 'Criar nova conta' : 'Faça login para continuar'}
-          </p>
-          {!showRegister && (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #F5E6D3 0%, #F4D1D1 50%, #E6A4A4 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      fontFamily: '"Segoe UI", Tahoma, Geneva, Verdana, sans-serif'
+    }}>
+      <div style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: '20px',
+        padding: '40px',
+        width: '100%',
+        maxWidth: '420px',
+        boxShadow: '0 20px 40px rgba(196, 136, 136, 0.3)',
+        border: '1px solid rgba(230, 164, 164, 0.2)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+          {/* Logo Circular */}
+          <div style={{
+            width: '100px',
+            height: '100px',
+            margin: '0 auto 20px auto',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #E6A4A4 0%, #F4D1D1 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '3px solid #C48888',
+            boxShadow: '0 8px 16px rgba(196, 136, 136, 0.3)'
+          }}>
             <div style={{
-              padding: '8px 12px',
-              backgroundColor: '#fff3cd',
-              color: '#856404',
-              border: '1px solid #ffeaa7',
-              borderRadius: '5px',
-              fontSize: '0.8rem',
-              marginBottom: '1rem'
+              fontSize: '36px',
+              background: 'linear-gradient(45deg, #F5E6D3, #FFFFFF)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontWeight: 'bold'
             }}>
-              💡 <strong>Demo:</strong> demo@odonto.com / demo123
+              🦷
             </div>
-          )}
+          </div>
+          
+          <h1 style={{
+            color: '#C48888',
+            fontSize: '24px',
+            fontWeight: '600',
+            margin: '0 0 8px 0',
+            letterSpacing: '1px',
+            textTransform: 'uppercase'
+          }}>
+            Dra. Larissa Rufino
+          </h1>
+          
+          <p style={{
+            color: '#A67C7C',
+            fontSize: '14px',
+            margin: '0 0 20px 0',
+            fontWeight: '400',
+            letterSpacing: '0.5px'
+          }}>
+            ORTODONTIA • CIRURGIA • ESTÉTICA
+          </p>
+          
+          <div style={{
+            height: '2px',
+            background: 'linear-gradient(90deg, transparent 0%, #E6A4A4 50%, transparent 100%)',
+            margin: '20px 0',
+            borderRadius: '1px'
+          }}></div>
+          
+          <p style={{ 
+            color: '#8B6B6B', 
+            fontSize: '16px',
+            margin: '0',
+            fontWeight: '300'
+          }}>
+            {showRegister ? 'Criar nova conta' : 'Acesso ao Sistema'}
+          </p>
         </div>
 
         {error && (
@@ -198,63 +256,134 @@ const Login = () => {
 
         {!showRegister ? (
           // Formulário de Login
-          <form onSubmit={handleLogin} className="auth-form">
-            <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
+          <form onSubmit={handleLogin}>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                color: '#C48888',
+                fontSize: '14px',
+                fontWeight: '500',
+                letterSpacing: '0.5px'
+              }}>
+                📧 Email
+              </label>
               <input
                 type="email"
                 id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="form-input"
                 required
                 placeholder="seu@email.com"
+                style={{
+                  width: '100%',
+                  padding: '15px 20px',
+                  border: '2px solid #F4D1D1',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  backgroundColor: 'rgba(245, 230, 211, 0.3)',
+                  color: '#8B6B6B',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid #E6A4A4';
+                  e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
+                  e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '2px solid #F4D1D1';
+                  e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
 
-            <div className="form-group">
-              <label htmlFor="password" className="form-label">Senha</label>
+            <div style={{ marginBottom: '30px' }}>
+              <label style={{
+                display: 'block',
+                marginBottom: '8px',
+                color: '#C48888',
+                fontSize: '14px',
+                fontWeight: '500',
+                letterSpacing: '0.5px'
+              }}>
+                🔒 Senha
+              </label>
               <input
                 type="password"
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="form-input"
                 required
                 placeholder="••••••••"
                 minLength={6}
+                style={{
+                  width: '100%',
+                  padding: '15px 20px',
+                  border: '2px solid #F4D1D1',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  backgroundColor: 'rgba(245, 230, 211, 0.3)',
+                  color: '#8B6B6B',
+                  boxSizing: 'border-box',
+                  transition: 'all 0.3s ease',
+                  outline: 'none'
+                }}
+                onFocus={(e) => {
+                  e.target.style.border = '2px solid #E6A4A4';
+                  e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
+                  e.target.style.boxShadow = '0 0 15px rgba(230, 164, 164, 0.3)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.border = '2px solid #F4D1D1';
+                  e.target.style.backgroundColor = 'rgba(245, 230, 211, 0.3)';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
 
             <button 
               type="submit" 
-              className="btn btn-primary"
               disabled={isLoading}
-              style={{ width: '100%', marginBottom: '1rem' }}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: isLoading 
+                  ? 'linear-gradient(135deg, #C48888 0%, #A67C7C 100%)'
+                  : 'linear-gradient(135deg, #E6A4A4 0%, #C48888 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontWeight: '600',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 8px 20px rgba(230, 164, 164, 0.4)',
+                transition: 'all 0.3s ease',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+                marginBottom: '20px',
+                opacity: isLoading ? 0.7 : 1
+              }}
+              onMouseOver={(e) => {
+                if (!isLoading) {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 12px 25px rgba(230, 164, 164, 0.6)';
+                }
+              }}
+              onMouseOut={(e) => {
+                if (!isLoading) {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 8px 20px rgba(230, 164, 164, 0.4)';
+                }
+              }}
             >
-              {isLoading ? 'Entrando...' : 'Entrar'}
+              {isLoading ? '⏳ Entrando...' : '✨ Acessar Sistema'}
             </button>
 
-            <div className="text-center">
-              <p style={{ color: '#6b7280' }}>
-                Não tem uma conta?{' '}
-                <button
-                  type="button"
-                  onClick={toggleMode}
-                  style={{ 
-                    color: 'var(--primary-color)', 
-                    background: 'none', 
-                    border: 'none', 
-                    cursor: 'pointer',
-                    textDecoration: 'underline'
-                  }}
-                >
-                  Criar conta
-                </button>
-              </p>
-            </div>
           </form>
         ) : (
           // Formulário de Registro
@@ -363,16 +492,30 @@ const Login = () => {
           </form>
         )}
 
-        <div className="text-center mt-4">
+        <div style={{ textAlign: 'center', marginTop: '20px' }}>
           <Link 
             to="/" 
             style={{ 
-              color: '#6b7280', 
+              color: '#A67C7C', 
               textDecoration: 'none', 
-              fontSize: '0.875rem' 
+              fontSize: '14px',
+              fontWeight: '400',
+              transition: 'all 0.3s ease',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              backgroundColor: 'rgba(230, 164, 164, 0.1)',
+              border: '1px solid rgba(244, 209, 209, 0.5)'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.color = '#C48888';
+              e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.2)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.color = '#A67C7C';
+              e.target.style.backgroundColor = 'rgba(230, 164, 164, 0.1)';
             }}
           >
-            ← Voltar ao teste de conexão
+            ← Teste de Conexão
           </Link>
         </div>
       </div>
@@ -381,3 +524,8 @@ const Login = () => {
 };
 
 export default Login;
+
+
+
+
+

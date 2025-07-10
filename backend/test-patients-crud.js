@@ -77,9 +77,9 @@ async function testCreatePatient() {
   
   const newPatient = {
     name: 'Paciente Teste CRUD',
-    email: 'teste.crud@email.com',
+    email: `teste.crud.${Date.now()}@email.com`,
     phone: '(11) 99999-9999',
-    document: '123.456.789-10',
+    document: `${Math.floor(Math.random() * 900000000) + 100000000}-${Math.floor(Math.random() * 90) + 10}`,
     birth_date: '1990-01-01',
     gender: 'masculino',
     address: {
@@ -258,5 +258,8 @@ async function runAllTests() {
 
 // Executar testes
 runAllTests().catch(console.error);
+
+
+
 
 

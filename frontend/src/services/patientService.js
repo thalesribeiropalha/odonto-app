@@ -11,7 +11,7 @@ export const getPatients = async (filters = {}) => {
     if (filters.gender) params.append('gender', filters.gender);
     if (filters.active !== undefined) params.append('active', filters.active);
 
-    const response = await api.get(`/patients?${params.toString()}`);
+    const response = await api.get(`/api/patients?${params.toString()}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar pacientes:', error);
@@ -22,7 +22,7 @@ export const getPatients = async (filters = {}) => {
 // Obter paciente por ID
 export const getPatientById = async (id) => {
   try {
-    const response = await api.get(`/patients/${id}`);
+    const response = await api.get(`/api/patients/${id}`);
     return response.data;
   } catch (error) {
     console.error('Erro ao buscar paciente:', error);
@@ -33,7 +33,7 @@ export const getPatientById = async (id) => {
 // Criar novo paciente
 export const createPatient = async (patientData) => {
   try {
-    const response = await api.post('/patients', patientData);
+    const response = await api.post('/api/patients', patientData);
     return response.data;
   } catch (error) {
     console.error('Erro ao criar paciente:', error);
@@ -44,7 +44,7 @@ export const createPatient = async (patientData) => {
 // Atualizar paciente
 export const updatePatient = async (id, patientData) => {
   try {
-    const response = await api.put(`/patients/${id}`, patientData);
+    const response = await api.put(`/api/patients/${id}`, patientData);
     return response.data;
   } catch (error) {
     console.error('Erro ao atualizar paciente:', error);
@@ -55,7 +55,7 @@ export const updatePatient = async (id, patientData) => {
 // Alternar status do paciente (ativo/inativo)
 export const togglePatientStatus = async (id) => {
   try {
-    const response = await api.patch(`/patients/${id}/toggle-status`);
+    const response = await api.patch(`/api/patients/${id}/toggle-status`);
     return response.data;
   } catch (error) {
     console.error('Erro ao alterar status do paciente:', error);
@@ -66,7 +66,7 @@ export const togglePatientStatus = async (id) => {
 // Buscar pacientes (para autocomplete)
 export const searchPatients = async (query, limit = 10) => {
   try {
-    const response = await api.get(`/patients/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    const response = await api.get(`/api/patients/search?q=${encodeURIComponent(query)}&limit=${limit}`);
     return response.data;
   } catch (error) {
     console.error('Erro na busca de pacientes:', error);
@@ -77,7 +77,7 @@ export const searchPatients = async (query, limit = 10) => {
 // Obter estatísticas de pacientes
 export const getPatientsStats = async () => {
   try {
-    const response = await api.get('/patients/stats');
+    const response = await api.get('/api/patients/stats');
     return response.data;
   } catch (error) {
     console.error('Erro ao obter estatísticas:', error);
@@ -235,4 +235,11 @@ export default {
   isValidEmail,
   isValidPhone
 };
+
+
+
+
+
+
+
 
