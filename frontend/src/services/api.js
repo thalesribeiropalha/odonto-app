@@ -3,7 +3,6 @@ import axios from 'axios';
 // Detecta se está rodando em servidor unified ou separado
 const isUnifiedMode = () => {
   return window.location.port === '3002' || 
-         import.meta.env.PROD || 
          import.meta.env.VITE_UNIFIED_MODE === 'true';
 };
 
@@ -73,6 +72,7 @@ export const apiService = {
 };
 
 export default api;
+
 
 
 
