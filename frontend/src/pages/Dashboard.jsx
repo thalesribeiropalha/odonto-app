@@ -82,18 +82,24 @@ const Dashboard = () => {
               <div className="dashboard-card">
                 <h3 className="card-title">👥 Pacientes</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                  0
+                  3
                 </div>
                 <p style={{ color: '#6b7280', margin: 0 }}>
                   Total de pacientes cadastrados
                 </p>
-                <button 
+                <Link 
+                  to="/patients"
                   className="btn btn-primary" 
-                  style={{ marginTop: '1rem', fontSize: '0.875rem' }}
-                  disabled
+                  style={{ 
+                    marginTop: '1rem', 
+                    fontSize: '0.875rem',
+                    textDecoration: 'none',
+                    textAlign: 'center',
+                    display: 'inline-block'
+                  }}
                 >
-                  Gerenciar Pacientes (Em breve)
-                </button>
+                  Gerenciar Pacientes
+                </Link>
               </div>
 
               <div className="dashboard-card">
@@ -299,3 +305,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+

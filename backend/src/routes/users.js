@@ -7,12 +7,16 @@ const {
   createUser,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserStats
 } = require('../controllers/userController');
 
 // Todas as rotas protegidas por autenticação e organização
 router.use(protect);
 router.use(organizationAuth);
+
+// GET /api/users/stats - Obter estatísticas de usuários
+router.get('/stats', getUserStats);
 
 // GET /api/users - Listar usuários da organização
 router.get('/', getUsers);

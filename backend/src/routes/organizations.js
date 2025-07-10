@@ -8,11 +8,23 @@ const {
   getOrganization,
   updateOrganization,
   deleteOrganization,
-  toggleOrganizationStatus
+  toggleOrganizationStatus,
+  getSystemStats
 } = require('../controllers/organizationController');
 
 // Todas as rotas requerem autenticação
 router.use(protect);
+
+// GET /api/organizations/stats - Estatísticas do sistema (apenas admin)
+router.get('/stats', (req, res) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({
+      success: false,
+      message: 'Apenas administradores podem ver estatísticas do sistema'
+    });
+  }
+  getSystemStats(req, res);
+});
 
 // GET /api/organizations - Listar todas organizações (apenas admin)
 router.get('/', (req, res) => {

@@ -78,16 +78,17 @@ export const getOrganizationStats = async (id = null) => {
   }
 };
 
-// Atualizar plano da organização
-export const updateOrganizationPlan = async (id, planData) => {
+// Obter estatísticas do sistema (apenas para admins)
+export const getSystemStats = async () => {
   try {
-    const response = await api.patch(`/api/organizations/${id}/plan`, planData);
+    const response = await api.get('/api/organizations/stats');
     return response.data;
   } catch (error) {
-    console.error('Erro ao atualizar plano da organização:', error);
+    console.error('Erro ao buscar estatísticas do sistema:', error);
     throw error;
   }
 };
+
 
 // Helpers para exibição
 export const getPlanDisplayName = (plan) => {

@@ -7,6 +7,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173',
+    'http://localhost:5174',
     'https://odonto-app-eight.vercel.app',
     process.env.FRONTEND_URL
   ].filter(Boolean),
@@ -25,6 +26,7 @@ const testSupabaseRoutes = require('./routes/test-supabase');
 const organizationRoutes = require('./routes/organizations');
 const fixAdminRoutes = require('./routes/fix-admin');
 const debugAuthRoutes = require('./routes/debug-auth');
+const patientRoutes = require('./routes/patients');
 
 app.use('/api', statusRoutes);
 app.use('/api/auth', authRoutes);
@@ -34,6 +36,7 @@ app.use('/api/test-supabase', testSupabaseRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/fix', fixAdminRoutes);
 app.use('/api/debug-auth', debugAuthRoutes);
+app.use('/api/patients', patientRoutes);
 
 // Middleware de tratamento de erros
 app.use((err, req, res, next) => {
@@ -57,3 +60,6 @@ app.use((req, res) => {
 });
 
 module.exports = app;
+
+
+

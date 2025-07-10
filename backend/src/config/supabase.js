@@ -1,9 +1,19 @@
 const { createClient } = require('@supabase/supabase-js');
 
 // Configurações do Supabase via variáveis de ambiente
-const supabaseUrl = process.env.SUPABASE_URL || 'https://ahnygfwpzuierxsitore.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobnlnZndwenVpZXJ4c2l0b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMzA1MzQsImV4cCI6MjA2NjkwNjUzNH0.X4nVjM2rz-DpXmZ8GK6yZKmj3JK-eMkThUt6onMcBmI';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobnlnZndwenVpZXJ4c2l0b3JlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTMzMDUzNCwiZXhwIjoyMDY2OTA2NTM0fQ.bL2PWsFomxBEGks0Skq6vMf2naTkocpOo5tdjKhPnUs';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+
+// Verificar se as variáveis estão definidas
+if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceKey) {
+  console.error('❌ Variáveis de ambiente do Supabase não configuradas!');
+  console.error('Verifique se o arquivo .env tem as seguintes variáveis:');
+  console.error('- SUPABASE_URL');
+  console.error('- SUPABASE_ANON_KEY');
+  console.error('- SUPABASE_SERVICE_KEY');
+  process.exit(1);
+}
 
 // Cliente para operações normais (com RLS)
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -42,3 +52,4 @@ module.exports = {
   supabaseAdmin,
   testConnection
 };
+

@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Users from './pages/Users'
 import Organizations from './pages/Organizations'
+import Patients from './pages/Patients'
 import './App.css'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/users" element={<Users />} />
             <Route path="/organizations" element={<Organizations />} />
+            <Route path="/patients" element={<Patients />} />
           </Routes>
         </div>
       </Router>
@@ -27,3 +29,5 @@ function App() {
 }
 
 export default App
+
+

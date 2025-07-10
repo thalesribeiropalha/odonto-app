@@ -35,7 +35,8 @@ const protect = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        organizationId: user.organization_id,
+        organization_id: user.organization_id,
+        organizationId: user.organization_id, // Manter compatibilidade
         permissions: user.permissions || [],
         isActive: user.is_active
       };
@@ -91,3 +92,4 @@ module.exports = {
   getUsersFromMemory, 
   usersInMemory 
 };
+

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getMyOrganization, getOrganizationStats, getPlanDisplayName, getPlanColor } from '../services/organizationService';
+import { getMyOrganization, getOrganizationStats, getSystemStats, getPlanDisplayName, getPlanColor } from '../services/organizationService';
 
 const OrganizationCard = ({ userRole, onManageClick }) => {
   const { user } = useAuth();
@@ -23,11 +23,9 @@ const OrganizationCard = ({ userRole, onManageClick }) => {
           name: 'Sistema Administrativo',
           subscription: { plan: 'enterprise' }
         });
-        setStats({
-          totalOrganizations: 12,
-          activeOrganizations: 10,
-          totalUsers: 45
-        });
+        
+        const statsResponse = await getSystemStats();
+        setStats(statsResponse.stats);
       } else {
         // Owner vê dados da própria organização
         const [orgResponse, statsResponse] = await Promise.all([

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getUsers, toggleUserStatus, getRoleDisplayName, getStatusDisplayName, getStatusColor } from '../services/userService';
 import UserModal from '../components/UserModal';
 import CreateUserModal from '../components/CreateUserModal';
 
 const Users = () => {
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,6 +103,10 @@ const Users = () => {
     ));
   };
 
+  const handleUserCreated = (newUser) => {
+    setUsers(prev => [...prev, newUser]);
+  };
+
   const clearFilters = () => {
     setFilters({
       search: '',
@@ -170,9 +176,28 @@ const Users = () => {
         flexWrap: 'wrap',
         gap: '16px'
       }}>
-        <h1 style={{ margin: 0, color: '#333' }}>
-          👥 Gerenciamento de Usuários
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+          >
+            ← Voltar
+          </button>
+          <h1 style={{ margin: 0, color: '#333' }}>
+            👥 Gerenciamento de Usuários
+          </h1>
+        </div>
         <div style={{ 
           display: 'flex', 
           alignItems: 'center', 
@@ -183,6 +208,21 @@ const Users = () => {
           <span>Total: <strong>{users.length}</strong></span>
           <span>|</span>
           <span>Filtrados: <strong>{filteredUsers.length}</strong></span>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              marginLeft: '16px'
+            }}
+          >
+            ➕ Novo Usuário
+          </button>
         </div>
       </div>
 
@@ -248,8 +288,8 @@ const Users = () => {
             >
               <option value="all">Todas as funções</option>
               <option value="admin">Administrador</option>
-              <option value="dentista">Dentista</option>
-              <option value="secretaria">Secretária</option>
+              <option value="dentist">Dentista</option>
+              <option value="secretary">Secretária</option>
             </select>
           </div>
 
@@ -382,8 +422,8 @@ const Users = () => {
                   borderRadius: '12px',
                   fontSize: '12px',
                   fontWeight: 'bold',
-                  backgroundColor: user.role === 'admin' ? '#e3f2fd' : user.role === 'dentista' ? '#f3e5f5' : '#e8f5e8',
-                  color: user.role === 'admin' ? '#1565c0' : user.role === 'dentista' ? '#7b1fa2' : '#2e7d32'
+                  backgroundColor: user.role === 'admin' ? '#e3f2fd' : user.role === 'dentist' ? '#f3e5f5' : '#e8f5e8',
+                  color: user.role === 'admin' ? '#1565c0' : user.role === 'dentist' ? '#7b1fa2' : '#2e7d32'
                 }}>
                   {getRoleDisplayName(user.role)}
                 </span>
@@ -457,8 +497,18 @@ const Users = () => {
         }}
         onUserUpdated={handleUserUpdated}
       />
+
+      {/* Modal de Criação */}
+      <CreateUserModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onUserCreated={handleUserCreated}
+      />
     </div>
   );
 };
 
 export default Users;
+
+
+

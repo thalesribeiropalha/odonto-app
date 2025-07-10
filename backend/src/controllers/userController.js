@@ -399,10 +399,63 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Obter estatísticas de usuários
+const getUserStats = async (req, res) => {
+  try {
+    const organizationId = req.organization?.id;
+    
+    if (!organizationId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Organização não identificada'
+      });
+    }
+
+    // Buscar estatísticas dos usuários
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('role, is_active')
+      .eq('organization_id', organizationId);
+
+    if (error) {
+      console.error('Erro ao buscar estatísticas de usuários:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar estatísticas',
+        error: error.message
+      });
+    }
+
+    const stats = {
+      totalUsers: users.length,
+      activeUsers: users.filter(u => u.is_active).length,
+      inactiveUsers: users.filter(u => !u.is_active).length,
+      byRole: {
+        admin: users.filter(u => u.role === 'admin').length,
+        dentist: users.filter(u => u.role === 'dentist').length,
+        secretary: users.filter(u => u.role === 'secretary').length
+      }
+    };
+
+    res.json({
+      success: true,
+      stats
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas de usuários:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getUsers,
   createUser,
   getUser,
   updateUser,
-  deleteUser
+  deleteUser,
+  getUserStats
 };

@@ -4,7 +4,7 @@ const { supabase } = require('../config/supabase');
 const organizationAuth = async (req, res, next) => {
   try {
     // 1. Verificar se o usuário tem organização
-    if (!req.user.organizationId) {
+    if (!req.user.organization_id) {
       return res.status(403).json({
         success: false,
         message: 'Usuário não pertence a uma organização'
@@ -15,7 +15,7 @@ const organizationAuth = async (req, res, next) => {
     const { data: organization, error } = await supabase
       .from('organizations')
       .select('*')
-      .eq('id', req.user.organizationId)
+      .eq('id', req.user.organization_id)
       .eq('is_active', true)
       .single();
 
@@ -143,3 +143,4 @@ module.exports = {
   getDefaultPermissions,
   getAllPermissions
 };
+

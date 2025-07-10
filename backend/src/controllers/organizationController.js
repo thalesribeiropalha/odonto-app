@@ -421,6 +421,60 @@ const deleteOrganization = async (req, res) => {
   }
 };
 
+// Obter estatísticas do sistema (para admin)
+const getSystemStats = async (req, res) => {
+  try {
+    // Buscar total de organizações
+    const { data: orgsData, error: orgsError } = await supabase
+      .from('organizations')
+      .select('id, is_active');
+
+    if (orgsError) {
+      console.error('Erro ao buscar organizações:', orgsError);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar estatísticas de organizações',
+        error: orgsError.message
+      });
+    }
+
+    // Buscar total de usuários
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('id')
+      .neq('role', 'system_admin'); // Excluir admin do sistema da contagem
+
+    if (usersError) {
+      console.error('Erro ao buscar usuários:', usersError);
+      return res.status(500).json({
+        success: false,
+        message: 'Erro ao buscar estatísticas de usuários',
+        error: usersError.message
+      });
+    }
+
+    const totalOrganizations = orgsData ? orgsData.length : 0;
+    const activeOrganizations = orgsData ? orgsData.filter(org => org.is_active).length : 0;
+    const totalUsers = usersData ? usersData.length : 0;
+
+    res.json({
+      success: true,
+      stats: {
+        totalOrganizations,
+        activeOrganizations,
+        totalUsers
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao buscar estatísticas do sistema:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+};
+
 // Ativar/Desativar organização
 const toggleOrganizationStatus = async (req, res) => {
   try {
@@ -495,5 +549,6 @@ module.exports = {
   getOrganization,
   updateOrganization,
   deleteOrganization,
-  toggleOrganizationStatus
+  toggleOrganizationStatus,
+  getSystemStats
 };
