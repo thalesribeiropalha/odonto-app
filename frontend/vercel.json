@@ -1,11 +1,24 @@
 {
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "@vercel/node"
+    }
+  },
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
   "env": {
-    "VITE_API_URL": "https://odonto-app-backend.up.railway.app"
+    "JWT_SECRET": "odonto-app-secret-key-2025",
+    "SUPABASE_URL": "https://ahnygfwpzuierxsitore.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobnlnZndwenVpZXJ4c2l0b3JlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzMzA1MzQsImV4cCI6MjA2NjkwNjUzNH0.X4nVjM2rz-DpXmZ8GK6yZKmj3JK-eMkThUt6onMcBmI",
+    "SUPABASE_SERVICE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFobnlnZndwenVpZXJ4c2l0b3JlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTMzMDUzNCwiZXhwIjoyMDY2OTA2NTM0fQ.bL2PWsFomxBEGks0Skq6vMf2naTkocpOo5tdjKhPnUs"
   }
 }
+
