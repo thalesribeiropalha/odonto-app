@@ -50,10 +50,12 @@ const Patients = () => {
       });
       
       if (response.success) {
-        setPatients(response.patients || []);
+        const patientsArray = response.patients || [];
+        setPatients(patientsArray);
         setPagination(prev => ({
           ...prev,
-          ...response.pagination
+          ...response.pagination,
+          total: patientsArray.length // Usar o tamanho real do array
         }));
         setError(null);
       } else {
@@ -583,4 +585,5 @@ const Patients = () => {
 };
 
 export default Patients;
+
 

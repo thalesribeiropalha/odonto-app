@@ -13,12 +13,13 @@ export default defineConfig({
     host: true, // Para acessar via IP da rede local
     proxy: {
       '/api': {
-        target: 'http://localhost:3002',
+        target: 'http://localhost:3003',
         changeOrigin: true,
         secure: false,
       }
     }
   },
+  appType: 'spa', // Adicionar para habilitar historyApiFallback
   preview: {
     port: 4173,
     host: true
@@ -48,4 +49,5 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
   }
 })
+
 

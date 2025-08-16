@@ -6,7 +6,10 @@
   "scripts": {
     "start": "npm run build:frontend && node server.js",
     "dev": "node server.js",
+    "dev-clean": "node scripts/clear-port.js && node server.js",
     "dev:unified": "npm run build:frontend && node server.js",
+    "dev:unified-clean": "node scripts/clear-port.js && npm run build:frontend && node server.js",
+    "clean-port": "node scripts/clear-port.js",
     "build:frontend": "cd ../frontend && npm run build",
     "serve": "npm run dev:unified",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -38,5 +41,6 @@
     "node": ">=18.0.0"
   }
 }
+
 
 

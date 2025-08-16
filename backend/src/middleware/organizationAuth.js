@@ -26,21 +26,22 @@ const organizationAuth = async (req, res, next) => {
       });
     }
     
+    // COMENTADO PARA TESTES LOCAIS
     // 3. Verificar plano ativo
-    if (organization.subscription?.expiresAt && new Date(organization.subscription.expiresAt) < new Date()) {
-      return res.status(403).json({
-        success: false,
-        message: 'Plano expirado. Renove sua assinatura.'
-      });
-    }
+    // if (organization.subscription?.expiresAt && new Date(organization.subscription.expiresAt) < new Date()) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Plano expirado. Renove sua assinatura.'
+    //   });
+    // }
     
     // 4. Verificar se o plano está ativo
-    if (organization.subscription && !organization.subscription.isActive) {
-      return res.status(403).json({
-        success: false,
-        message: 'Plano inativo. Entre em contato com o suporte.'
-      });
-    }
+    // if (organization.subscription && !organization.subscription.isActive) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: 'Plano inativo. Entre em contato com o suporte.'
+    //   });
+    // }
     
     // 5. Adicionar organização ao request
     req.organization = organization;
@@ -143,4 +144,5 @@ module.exports = {
   getDefaultPermissions,
   getAllPermissions
 };
+
 

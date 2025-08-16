@@ -1,13 +1,16 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import OrganizationCard from '../components/OrganizationCard';
 import { AdminOnly, OperationalAccess } from '../components/ProtectedComponent';
 import usePermissions from '../hooks/usePermissions';
+import { getPatients } from '../services/patientService';
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const [patientsCount, setPatientsCount] = useState(0);
+  const [loadingPatients, setLoadingPatients] = useState(true);
 
   useEffect(() => {
     // Se não está autenticado, redirecionar para login
@@ -15,6 +18,26 @@ const Dashboard = () => {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    // Carregar dados dos pacientes se autenticado
+    if (isAuthenticated && user) {
+      loadPatientsCount();
+    }
+  }, [isAuthenticated, user]);
+
+  const loadPatientsCount = async () => {
+    try {
+      setLoadingPatients(true);
+      const response = await getPatients({ limit: 100 }); // Buscar todos os pacientes
+      setPatientsCount(response.patients?.length || 0);
+    } catch (error) {
+      console.error('Erro ao carregar contagem de pacientes:', error);
+      setPatientsCount(0);
+    } finally {
+      setLoadingPatients(false);
+    }
+  };
 
   const handleLogout = () => {
     logout();
@@ -84,7 +107,7 @@ const Dashboard = () => {
               <div className="dashboard-card">
                 <h3 className="card-title">👥 Pacientes</h3>
                 <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary-color)' }}>
-                  3
+                  {loadingPatients ? '...' : patientsCount}
                 </div>
                 <p style={{ color: '#6b7280', margin: 0 }}>
                   Total de pacientes cadastrados
@@ -310,6 +333,9 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
+
+
 
 
 

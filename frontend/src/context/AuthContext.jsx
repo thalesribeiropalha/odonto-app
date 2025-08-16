@@ -38,8 +38,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthState = async () => {
     try {
-      const storedToken = localStorage.getItem('odonto-token');
-      const storedUser = localStorage.getItem('odonto-user');
+      const storedToken = localStorage.getItem('odonto-app-token');
+      const storedUser = localStorage.getItem('odonto-app-user');
       
       if (storedToken && storedUser) {
         // VERIFICAR SE É TOKEN FIXO DE DESENVOLVIMENTO
@@ -79,8 +79,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const clearAuthData = () => {
-    localStorage.removeItem('odonto-token');
-    localStorage.removeItem('odonto-user');
+    localStorage.removeItem('odonto-app-token');
+    localStorage.removeItem('odonto-app-user');
     setUser(null);
   };
 
@@ -93,8 +93,8 @@ export const AuthProvider = ({ children }) => {
       const { token, ...userData } = response.data;
       
       // Salvar dados no localStorage
-      localStorage.setItem('odonto-token', token);
-      localStorage.setItem('odonto-user', JSON.stringify(userData));
+      localStorage.setItem('odonto-app-token', token);
+      localStorage.setItem('odonto-app-user', JSON.stringify(userData));
       
       setUser(userData);
       
@@ -127,8 +127,8 @@ export const AuthProvider = ({ children }) => {
       const { token, ...userInfo } = response.data;
       
       // Salvar dados no localStorage
-      localStorage.setItem('odonto-token', token);
-      localStorage.setItem('odonto-user', JSON.stringify(userInfo));
+      localStorage.setItem('odonto-app-token', token);
+      localStorage.setItem('odonto-app-user', JSON.stringify(userInfo));
       
       setUser(userInfo);
       
@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }) => {
       const updatedUser = response.data;
       
       // Atualizar dados no localStorage
-      localStorage.setItem('odonto-user', JSON.stringify(updatedUser));
+      localStorage.setItem('odonto-app-user', JSON.stringify(updatedUser));
       setUser(updatedUser);
       
       return { success: true, user: updatedUser };
@@ -194,6 +194,7 @@ export const AuthProvider = ({ children }) => {
 };
 
 export default AuthContext;
+
 
 
 
